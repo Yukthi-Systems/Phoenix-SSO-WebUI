@@ -1,9 +1,13 @@
 services: 
-  yspl-sso-ui:
-    image: rjyspl/yspl-sso-ui:latest
-    container_name: yspl-sso-ui
-    env_file:
-      - .env
+  v3-sso-ui:
+    image: rjyspl/v3-sso-ui:latest
+    container_name: v3-sso-ui
+    environment:
+      - NODE_ENV=production
+      - VITE_API_URL=https://sso.yukthi.net
+      - VITE_SSO_URL=https://sso.yukthi.net
+
     ports:
       - '127.0.0.1:3000:3000'
+
     restart: always
