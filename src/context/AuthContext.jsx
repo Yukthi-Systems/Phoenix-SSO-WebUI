@@ -188,7 +188,7 @@ export function AuthProvider({ children }) {
         document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
         // Attempt to clear on exact domain
         document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=${domain}`;
-        // Attempt to clear on parent domain (e.g., .yukthi.net)
+        // Attempt to clear on parent domain (e.g., .example.com)
         const domainParts = domain.split('.');
         if (domainParts.length >= 2) {
            const rootDomain = `.${domainParts.slice(-2).join('.')}`;

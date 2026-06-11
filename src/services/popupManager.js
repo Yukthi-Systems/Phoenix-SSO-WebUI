@@ -1,7 +1,7 @@
 import { isValidOrigin } from '../utils/security';
 
 /**
- * Reusable Popup Authentication Manager for client apps to integrate with yukthi.net SSO.
+ * Reusable Popup Authentication Manager for client apps to integrate with the SSO platform.
  */
 export const popupManager = {
   activePopup: null,
@@ -11,7 +11,7 @@ export const popupManager = {
   /**
    * Opens the SSO popup and waits for authentication result.
    * 
-   * @param {string} ssoUrl - The centralized SSO base URL (e.g. "https://alen.test.yukthi.net")
+   * @param {string} ssoUrl - The centralized SSO base URL (e.g. "https://sso.example.com")
    * @param {string} appName - The client application name (e.g. "app1")
    * @returns {Promise<object>} Resolves on auth success, rejects on failure or closure
    */

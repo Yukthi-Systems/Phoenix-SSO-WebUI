@@ -16,8 +16,11 @@ export function getBaseDomain() {
 }
 
 export function getBrandName() {
-  const base = getBaseDomain();
-  return base || 'SSO Portal';
+  // Use environment variable for white-labeling, or fallback to generic name
+  if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_BRAND_NAME) {
+    return import.meta.env.VITE_BRAND_NAME;
+  }
+  return 'SSO Portal';
 }
 
 // Whitelist patterns for permitted client applications

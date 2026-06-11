@@ -14,6 +14,9 @@ echo "window._env_ = {" >> ./dist/env-config.js
 # We use default values (:-"") to prevent errors if missing.
 echo "  VITE_API_URL: \"${VITE_API_URL:-https://sso.yukthi.net}\"," >> ./dist/env-config.js
 echo "  VITE_SSO_URL: \"${VITE_SSO_URL:-https://sso.yukthi.net}\"," >> ./dist/env-config.js
+echo "  VITE_FORGOT_PASSWORD_URL: \"${VITE_FORGOT_PASSWORD_URL:-https://v3-admin-ui.test.yukthi.net/reset/admin}\"," >> ./dist/env-config.js
+
+
 
 echo "}" >> ./dist/env-config.js
 

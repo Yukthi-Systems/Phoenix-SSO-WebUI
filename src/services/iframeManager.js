@@ -11,7 +11,7 @@ export const iframeManager = {
   /**
    * Performs silent auth check using a hidden iframe.
    * 
-   * @param {string} ssoUrl - The centralized SSO base URL (e.g. "https://alen.test.yukthi.net")
+   * @param {string} ssoUrl - The centralized SSO base URL (e.g. "https://sso.example.com")
    * @param {string} appName - The client application name (e.g. "app1")
    * @param {number} timeoutMs - Max timeout in milliseconds (default: 5000)
    * @returns {Promise<object>} Resolves on session validity, rejects on invalid session or timeout
