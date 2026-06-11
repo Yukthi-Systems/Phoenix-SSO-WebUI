@@ -171,7 +171,30 @@ export function AuthProvider({ children }) {
       setMfaPending(false);
       setMfaType(null);
       setTempToken(null);
-      localStorage.removeItem('sso_user_email');
+      
+      // Clear entire local storage
+      localStorage.clear();
+
+      // Clear all client-accessible cookies comprehensively
+      const cookies = document.cookie.split(";");
+      const domain = window.location.hostname;
+      
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i];
+        const eqPos = cookie.indexOf("=");
+        const name = eqPos > -1 ? cookie.substring(0, eqPos).trim() : cookie.trim();
+        
+        // Attempt to clear at root path
+        document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
+        // Attempt to clear on exact domain
+        document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=${domain}`;
+        // Attempt to clear on parent domain (e.g., .yukthi.net)
+        const domainParts = domain.split('.');
+        if (domainParts.length >= 2) {
+           const rootDomain = `.${domainParts.slice(-2).join('.')}`;
+           document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=${rootDomain}`;
+        }
+      }
 
       if (rotationIntervalRef.current) {
         clearInterval(rotationIntervalRef.current);
