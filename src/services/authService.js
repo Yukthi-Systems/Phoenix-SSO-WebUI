@@ -54,6 +54,27 @@ function getDeviceDetails(ipAddress = '') {
     secChUaPlatform = `"${navigator.userAgentData.platform}"`;
   }
 
+  const hardwareConcurrency = navigator.hardwareConcurrency || 'Unknown';
+  const deviceMemory = navigator.deviceMemory || 'Unknown';
+  const connectionType = navigator.connection ? navigator.connection.effectiveType : 'Unknown';
+  const cookieEnabled = navigator.cookieEnabled;
+  const doNotTrack = navigator.doNotTrack || 'Unknown';
+  const maxTouchPoints = navigator.maxTouchPoints || 0;
+  const vendor = navigator.vendor || 'Unknown';
+  const product = navigator.product || 'Unknown';
+  const productSub = navigator.productSub || 'Unknown';
+  const appVersion = navigator.appVersion || 'Unknown';
+  const pixelRatio = window.devicePixelRatio || 1;
+  const viewportResolution = `${window.innerWidth}x${window.innerHeight}`;
+  const javaEnabled = typeof navigator.javaEnabled === 'function' ? navigator.javaEnabled() : false;
+  const pdfViewerEnabled = navigator.pdfViewerEnabled || false;
+  const pluginsCount = navigator.plugins ? navigator.plugins.length : 0;
+  const mimesCount = navigator.mimeTypes ? navigator.mimeTypes.length : 0;
+  const timezoneOffset = new Date().getTimezoneOffset();
+  const localStorageEnabled = typeof window.localStorage !== 'undefined';
+  const sessionStorageEnabled = typeof window.sessionStorage !== 'undefined';
+  const webdriver = navigator.webdriver || false;
+
   const details = {
     os: osName,
     browser: browserName,
@@ -67,7 +88,27 @@ function getDeviceDetails(ipAddress = '') {
     userAgent: ua,
     secChUa,
     secChUaMobile,
-    secChUaPlatform
+    secChUaPlatform,
+    hardwareConcurrency,
+    deviceMemory,
+    connectionType,
+    cookieEnabled,
+    doNotTrack,
+    maxTouchPoints,
+    vendor,
+    product,
+    productSub,
+    appVersion,
+    pixelRatio,
+    viewportResolution,
+    javaEnabled,
+    pdfViewerEnabled,
+    pluginsCount,
+    mimesCount,
+    timezoneOffset,
+    localStorageEnabled,
+    sessionStorageEnabled,
+    webdriver
   };
 
   if (ipAddress) {
