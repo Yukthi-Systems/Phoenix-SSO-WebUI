@@ -31,9 +31,43 @@ function getDeviceDetails(ipAddress = '') {
     browserName = `Edge ${match ? match[1] : ''}`;
   }
 
+  const screenResolution = `${window.screen.width}x${window.screen.height}`;
+  const language = navigator.language || navigator.userLanguage || 'Unknown';
+  const acceptLanguage = navigator.languages ? navigator.languages.join(',') : language;
+  const platform = navigator.platform || 'Unknown';
+  let timeZone = 'Unknown';
+  try {
+    timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  } catch (e) {
+    // ignore
+  }
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+  const colorDepth = window.screen.colorDepth;
+
+  let secChUa = '';
+  let secChUaMobile = '';
+  let secChUaPlatform = '';
+
+  if (navigator.userAgentData) {
+    secChUa = navigator.userAgentData.brands.map(b => `"${b.brand}";v="${b.version}"`).join(', ');
+    secChUaMobile = navigator.userAgentData.mobile ? '?1' : '?0';
+    secChUaPlatform = `"${navigator.userAgentData.platform}"`;
+  }
+
   const details = {
     os: osName,
-    browser: browserName
+    browser: browserName,
+    screenResolution,
+    language,
+    acceptLanguage,
+    platform,
+    timeZone,
+    isMobile,
+    colorDepth,
+    userAgent: ua,
+    secChUa,
+    secChUaMobile,
+    secChUaPlatform
   };
 
   if (ipAddress) {

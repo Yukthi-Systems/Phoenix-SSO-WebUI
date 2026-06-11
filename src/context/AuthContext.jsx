@@ -21,8 +21,9 @@ export function AuthProvider({ children }) {
     try {
       setLoading(true);
       const data = await authService.validateSession();
-      if (data && data.valid) {
-        setUser(data.user || { email: 'user@' + getBrandName() });
+      if ((data && data.valid) || data === 'Session is valid' || (typeof data === 'string' && data.toLowerCase().includes('valid'))) {
+        const storedEmail = localStorage.getItem('sso_user_email');
+        setUser(data.user || { email: storedEmail || 'user@' + getBrandName() });
         setIsAuthenticated(true);
         setError(null);
         return true;
@@ -56,10 +57,12 @@ export function AuthProvider({ children }) {
         setMfaType(data.mfaType || 'email_otp');
         setTempToken(data.tempToken || null);
         setLoading(false);
+        localStorage.setItem('sso_user_email', email);
         return { mfaRequired: true, mfaType: data.mfaType || 'email_otp' };
       }
 
       // If no MFA is required, we validate session to fetch user profile
+      localStorage.setItem('sso_user_email', email);
       const ok = await checkSession();
       if (!ok) {
         console.warn('Session verification failed after login. Falling back to local state to support local development cookie restrictions.');
@@ -168,6 +171,7 @@ export function AuthProvider({ children }) {
       setMfaPending(false);
       setMfaType(null);
       setTempToken(null);
+      localStorage.removeItem('sso_user_email');
 
       if (rotationIntervalRef.current) {
         clearInterval(rotationIntervalRef.current);

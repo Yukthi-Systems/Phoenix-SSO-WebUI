@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import AuthLayout from '../layouts/AuthLayout';
 import { isValidOrigin, sanitizeRedirectUrl, getBrandName } from '../utils/security';
+import { FORGOT_PASSWORD_URL } from '../const/contants';
 
 export default function Login() {
   const { login, isAuthenticated, error, clearError, loading } = useAuth();
@@ -173,7 +174,7 @@ export default function Login() {
               Password
             </label>
             <a
-              href={`https://forgot-password.${getBrandName()}`}
+              href={FORGOT_PASSWORD_URL}
               className="text-xs text-primary font-medium hover:text-primary-hover hover:underline"
               target="_blank"
               rel="noopener noreferrer"
