@@ -47,7 +47,7 @@ apiClient.interceptors.response.use(
       // Return a structured error response that can be handled locally
       return Promise.reject({
         status,
-        message: data?.error || 'Your security session has expired.',
+        message: (typeof data === 'string' ? data : (data?.error || data?.message || data?.detail)) || 'Your security session has expired.',
         code: 'SESSION_EXPIRED',
         originalError: error,
       });
@@ -56,7 +56,7 @@ apiClient.interceptors.response.use(
     // Pass on other errors
     return Promise.reject({
       status,
-      message: data?.error || data?.message || 'An unexpected authentication error occurred.',
+      message: (typeof data === 'string' ? data : (data?.error || data?.message || data?.detail)) || 'An unexpected authentication error occurred.',
       originalError: error,
     });
   }

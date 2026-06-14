@@ -4,6 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import AuthLayout from '../layouts/AuthLayout';
 import { isValidOrigin, sanitizeRedirectUrl, getBrandName } from '../utils/security';
 import { FORGOT_PASSWORD_URL } from '../const/contants';
+import toast from 'react-hot-toast';
 
 export default function Login() {
   const { login, isAuthenticated, error, clearError, loading } = useAuth();
@@ -14,8 +15,6 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [validationError, setValidationError] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
 
   // Flow control flags
   const isPopup = searchParams.get('mode') === 'popup';
@@ -32,9 +31,13 @@ export default function Login() {
 
     // Clear any previous errors on mount
     clearError();
-    setValidationError('');
-    setSuccessMessage('');
   }, [clearError, navigate]);
+
+  useEffect(() => {
+    if (error) {
+      toast.error(error, { id: 'auth-error' });
+    }
+  }, [error]);
 
   // Handle automatic redirect if already logged in on page load
   useEffect(() => {
@@ -66,23 +69,22 @@ export default function Login() {
 
   const validateForm = () => {
     if (!email) {
-      setValidationError('Email address is required.');
+      toast.error('Email address is required.', { id: 'validation-error' });
       return false;
     }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      setValidationError('Please enter a valid email address.');
+      toast.error('Please enter a valid email address.', { id: 'validation-error' });
       return false;
     }
     if (!password) {
-      setValidationError('Password is required.');
+      toast.error('Password is required.', { id: 'validation-error' });
       return false;
     }
     if (password.length < 8) {
-      setValidationError('Password must be at least 8 characters long.');
+      toast.error('Password must be at least 8 characters long.', { id: 'validation-error' });
       return false;
     }
-    setValidationError('');
     return true;
   };
 
@@ -101,9 +103,8 @@ export default function Login() {
         const messageToShow = typeof result === 'string'
           ? result
           : (result && typeof result.message === 'string' ? result.message : 'Login successful');
-        setSuccessMessage(messageToShow);
+        toast.success(messageToShow, { id: 'auth-success' });
         clearError();
-        setValidationError('');
         setTimeout(() => {
           handleSuccessNavigation();
         }, 1000);
@@ -121,28 +122,6 @@ export default function Login() {
           Sign In
         </h2>
 
-        {/* Global/Validation Success Messages */}
-        {successMessage && (
-          <div className="bg-success/10 border border-success/20 text-success p-3 rounded-xl mb-5 text-sm flex items-center gap-2 animate-[fadeIn_0.25s_ease-out]" role="alert">
-            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true" className="shrink-0">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <span>{successMessage}</span>
-          </div>
-        )}
-
-        {/* Global/Validation Error Messages */}
-        {(error || validationError) && (
-          <div className="bg-error/10 border border-error/20 text-error p-3 rounded-xl mb-5 text-sm flex items-center gap-2 animate-[fadeIn_0.25s_ease-out]" role="alert">
-            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true" className="shrink-0">
-              <circle cx="12" cy="12" r="10"></circle>
-              <line x1="12" y1="8" x2="12" y2="12"></line>
-              <line x1="12" y1="16" x2="12.01" y2="16"></line>
-            </svg>
-            <span>{validationError || error}</span>
-          </div>
-        )}
-
         {/* Email Form Group */}
         <div className="mb-5 flex flex-col relative">
           <label className="text-sm font-medium mb-1.5 text-text-sub transition-colors" htmlFor="email">
@@ -157,8 +136,7 @@ export default function Login() {
               value={email}
               onChange={(e) => {
                 setEmail(e.target.value);
-                if (validationError) setValidationError('');
-                if (successMessage) setSuccessMessage('');
+                toast.dismiss('validation-error');
               }}
               disabled={loading}
               autoComplete="username"
@@ -191,8 +169,7 @@ export default function Login() {
               value={password}
               onChange={(e) => {
                 setPassword(e.target.value);
-                if (validationError) setValidationError('');
-                if (successMessage) setSuccessMessage('');
+                toast.dismiss('validation-error');
               }}
               disabled={loading}
               autoComplete="current-password"
