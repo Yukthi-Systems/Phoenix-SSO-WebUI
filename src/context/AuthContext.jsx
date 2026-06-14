@@ -21,9 +21,25 @@ export function AuthProvider({ children }) {
     try {
       setLoading(true);
       const data = await authService.validateSession();
-      if ((data && data.valid) || data === 'Session is valid' || (typeof data === 'string' && data.toLowerCase().includes('valid'))) {
+      
+      const isValid = (data && data.valid) || 
+                      data === 'Session is valid' || 
+                      (typeof data === 'string' && data.toLowerCase().includes('valid')) ||
+                      (data && data.message === 'Session is valid');
+
+      if (isValid) {
         const storedEmail = localStorage.getItem('sso_user_email');
-        setUser(data.user || { email: storedEmail || 'user@' + getBrandName() });
+        
+        // Map user profile from the top-level response if data.user is not available
+        const userProfile = data.user || {
+          email: data.email || storedEmail || 'user@' + getBrandName(),
+          first_name: data.first_name,
+          last_name: data.last_name,
+          organization_id: data.organization_id,
+          organization_name: data.organization_name
+        };
+
+        setUser(userProfile);
         setIsAuthenticated(true);
         setError(null);
         return true;
@@ -52,13 +68,21 @@ export function AuthProvider({ children }) {
       setError(null);
       const data = await authService.login(email, password, rememberMe);
 
-      if (data.requiresMfa) {
+      const requiresMfa = data.requiresMfa || data.is_app_2fa_enabled || data.is_email_2fa_enabled || data.is_sms_2fa_enabled;
+
+      if (requiresMfa) {
         setMfaPending(true);
-        setMfaType(data.mfaType || 'email_otp');
+        let type = data.mfaType || 'email_otp';
+        if (!data.mfaType) {
+          if (data.is_app_2fa_enabled) type = 'authenticator_otp';
+          else if (data.is_sms_2fa_enabled) type = 'sms_otp';
+          else if (data.is_email_2fa_enabled) type = 'email_otp';
+        }
+        setMfaType(type);
         setTempToken(data.tempToken || null);
         setLoading(false);
         localStorage.setItem('sso_user_email', email);
-        return { mfaRequired: true, mfaType: data.mfaType || 'email_otp' };
+        return { mfaRequired: true, mfaType: type };
       }
 
       // If no MFA is required, we validate session to fetch user profile
@@ -66,9 +90,29 @@ export function AuthProvider({ children }) {
       const ok = await checkSession();
       if (!ok) {
         console.warn('Session verification failed after login. Falling back to local state to support local development cookie restrictions.');
-        setUser({ email: email });
+        setUser({ 
+          email: data.email || email,
+          first_name: data.first_name,
+          last_name: data.last_name,
+          organization_id: data.organization_id,
+          organization_name: data.organization_name,
+          primary_phone: data.primary_phone,
+          secondary_email: data.secondary_email
+        });
         setIsAuthenticated(true);
+      } else {
+        // Since session check might not return full user info, we can augment it
+        setUser(prev => ({
+          ...prev,
+          first_name: prev?.first_name || data.first_name,
+          last_name: prev?.last_name || data.last_name,
+          organization_id: prev?.organization_id || data.organization_id,
+          organization_name: prev?.organization_name || data.organization_name,
+          primary_phone: prev?.primary_phone || data.primary_phone,
+          secondary_email: prev?.secondary_email || data.secondary_email
+        }));
       }
+      
       const message = typeof data === 'string' 
         ? data 
         : (data && typeof data.message === 'string' ? data.message : 'Login successful');

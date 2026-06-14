@@ -38,7 +38,8 @@ apiClient.interceptors.response.use(
       // Avoid redirecting if already on login page or if the request was to the login endpoint
       if (
         window.location.pathname !== '/login' &&
-        (!error.config?.url?.includes('/auth/login'))
+        (!error.config?.url?.includes('/auth/login')) &&
+        (!error.config?.url?.includes('/auth/logout'))
       ) {
         window.location.href = '/login';
       }

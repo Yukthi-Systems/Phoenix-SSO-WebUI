@@ -145,9 +145,9 @@ const authService = {
 
     const deviceDetails = getDeviceDetails(ipAddress);
 
-    const response = await apiClient.post('/auth/login', { 
-      user_email: email, 
-      password, 
+    const response = await apiClient.post('/auth/login', {
+      user_email: email,
+      password,
       rememberMe,
       device_details: deviceDetails
     });
@@ -210,7 +210,9 @@ const authService = {
    * Triggers global logout
    */
   async logout() {
-    const response = await apiClient.post('/logout');
+    const response = await apiClient.delete('/auth/logout', {
+      withCredentials: true
+    });
     return response.data;
     // Expected response: { success: true }
   }

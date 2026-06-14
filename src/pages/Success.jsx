@@ -46,14 +46,49 @@ export default function Success() {
           </p>
         </div>
 
-        {/* Masked User Information Card */}
-        <div className="w-full p-4 bg-black/15 border border-card-border rounded-xl text-left flex flex-col gap-1 transition-all duration-300 hover:border-white/10">
-          <span className="text-xs font-semibold uppercase tracking-wider text-text-muted">
-            Authenticated As
-          </span>
-          <span className="text-base font-medium text-text-sub truncate">
-            {displayEmail}
-          </span>
+        {/* User Information Card */}
+        <div className="w-full p-4 bg-black/15 border border-card-border rounded-xl text-left flex flex-col gap-4 transition-all duration-300 hover:border-white/10">
+          <div className="flex flex-col gap-1">
+            <span className="text-xs font-semibold uppercase tracking-wider text-text-muted">
+              Authenticated As
+            </span>
+            <span className="text-base font-medium text-text-sub truncate">
+              {displayEmail}
+            </span>
+          </div>
+
+          {((user && user.first_name) || (user && user.last_name)) && (
+            <div className="flex flex-col gap-1">
+              <span className="text-xs font-semibold uppercase tracking-wider text-text-muted">
+                Name
+              </span>
+              <span className="text-sm font-medium text-text-sub truncate">
+                {[user?.first_name, user?.last_name].filter(Boolean).join(' ')}
+              </span>
+            </div>
+          )}
+
+          {user && user.organization_name && (
+            <div className="flex flex-col gap-1">
+              <span className="text-xs font-semibold uppercase tracking-wider text-text-muted">
+                Organization
+              </span>
+              <span className="text-sm font-medium text-text-sub truncate">
+                {user.organization_name}
+              </span>
+            </div>
+          )}
+
+          {user && user.primary_phone && (
+            <div className="flex flex-col gap-1">
+              <span className="text-xs font-semibold uppercase tracking-wider text-text-muted">
+                Phone
+              </span>
+              <span className="text-sm font-medium text-text-sub truncate">
+                {user.primary_phone}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Action Button */}
