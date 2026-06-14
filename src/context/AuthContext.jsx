@@ -21,15 +21,15 @@ export function AuthProvider({ children }) {
     try {
       setLoading(true);
       const data = await authService.validateSession();
-      
-      const isValid = (data && data.valid) || 
-                      data === 'Session is valid' || 
-                      (typeof data === 'string' && data.toLowerCase().includes('valid')) ||
-                      (data && data.message === 'Session is valid');
+
+      const isValid = (data && data.valid) ||
+        data === 'Session is valid' ||
+        (typeof data === 'string' && data.toLowerCase().includes('valid')) ||
+        (data && data.message === 'Session is valid');
 
       if (isValid) {
         const storedEmail = localStorage.getItem('sso_user_email');
-        
+
         // Map user profile from the top-level response if data.user is not available
         const userProfile = data.user || {
           email: data.email || storedEmail || 'user@' + getBrandName(),
@@ -90,7 +90,7 @@ export function AuthProvider({ children }) {
       const ok = await checkSession();
       if (!ok) {
         console.warn('Session verification failed after login. Falling back to local state to support local development cookie restrictions.');
-        setUser({ 
+        setUser({
           email: data.email || email,
           first_name: data.first_name,
           last_name: data.last_name,
@@ -112,9 +112,9 @@ export function AuthProvider({ children }) {
           secondary_email: prev?.secondary_email || data.secondary_email
         }));
       }
-      
-      const message = typeof data === 'string' 
-        ? data 
+
+      const message = typeof data === 'string'
+        ? data
         : (data && typeof data.message === 'string' ? data.message : 'Login successful');
       return { success: true, message };
     } catch (err) {
@@ -215,19 +215,19 @@ export function AuthProvider({ children }) {
       setMfaPending(false);
       setMfaType(null);
       setTempToken(null);
-      
+
       // Clear entire local storage
       localStorage.clear();
 
       // Clear all client-accessible cookies comprehensively
       const cookies = document.cookie.split(";");
       const domain = window.location.hostname;
-      
+
       for (let i = 0; i < cookies.length; i++) {
         const cookie = cookies[i];
         const eqPos = cookie.indexOf("=");
         const name = eqPos > -1 ? cookie.substring(0, eqPos).trim() : cookie.trim();
-        
+
         // Attempt to clear at root path
         document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
         // Attempt to clear on exact domain
@@ -235,8 +235,8 @@ export function AuthProvider({ children }) {
         // Attempt to clear on parent domain (e.g., .example.com)
         const domainParts = domain.split('.');
         if (domainParts.length >= 2) {
-           const rootDomain = `.${domainParts.slice(-2).join('.')}`;
-           document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=${rootDomain}`;
+          const rootDomain = `.${domainParts.slice(-2).join('.')}`;
+          document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=${rootDomain}`;
         }
       }
 
@@ -249,7 +249,8 @@ export function AuthProvider({ children }) {
       window.location.href = '/login';
     }
   };
-  const clearError = useCallback(() => setError(null), []);
+
+  const clearError = () => setError(null);
 
   const value = {
     user,
