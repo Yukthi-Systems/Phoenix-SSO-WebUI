@@ -33,7 +33,8 @@ export default function Login() {
     // Clear any previous errors on mount
     clearError();
     setValidationError('');
-  }, [clearError, navigate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [navigate]);
 
 
 
