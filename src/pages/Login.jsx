@@ -15,6 +15,7 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [validationError, setValidationError] = useState('');
 
   // Flow control flags
   const isPopup = searchParams.get('mode') === 'popup';
@@ -31,13 +32,10 @@ export default function Login() {
 
     // Clear any previous errors on mount
     clearError();
+    setValidationError('');
   }, [clearError, navigate]);
 
-  useEffect(() => {
-    if (error) {
-      toast.error(error, { id: 'auth-error' });
-    }
-  }, [error]);
+
 
   // Handle automatic redirect if already logged in on page load
   useEffect(() => {
@@ -69,22 +67,23 @@ export default function Login() {
 
   const validateForm = () => {
     if (!email) {
-      toast.error('Email address is required.', { id: 'validation-error' });
+      setValidationError('Email address is required.');
       return false;
     }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      toast.error('Please enter a valid email address.', { id: 'validation-error' });
+      setValidationError('Please enter a valid email address.');
       return false;
     }
     if (!password) {
-      toast.error('Password is required.', { id: 'validation-error' });
+      setValidationError('Password is required.');
       return false;
     }
     if (password.length < 8) {
-      toast.error('Password must be at least 8 characters long.', { id: 'validation-error' });
+      setValidationError('Password must be at least 8 characters long.');
       return false;
     }
+    setValidationError('');
     return true;
   };
 
@@ -111,7 +110,8 @@ export default function Login() {
       }
     } catch (err) {
       // Error handled by AuthContext state
-      console.log('Authentication failed:', err);
+      setValidationError(err?.message)
+      console.log('Authentication failed:', err?.message);
     }
   };
 
@@ -136,7 +136,8 @@ export default function Login() {
               value={email}
               onChange={(e) => {
                 setEmail(e.target.value);
-                toast.dismiss('validation-error');
+                if (validationError) setValidationError('');
+                if (error) clearError();
               }}
               disabled={loading}
               autoComplete="username"
@@ -169,7 +170,8 @@ export default function Login() {
               value={password}
               onChange={(e) => {
                 setPassword(e.target.value);
-                toast.dismiss('validation-error');
+                if (validationError) setValidationError('');
+                if (error) clearError();
               }}
               disabled={loading}
               autoComplete="current-password"
@@ -196,6 +198,18 @@ export default function Login() {
             </button>
           </div>
         </div>
+
+        {/* Global/API Error Messages */}
+        {(error || validationError) && (
+          <div className="bg-error/10 border border-error/20 text-error p-3 rounded-xl mb-5 text-sm flex items-center gap-2 animate-[fadeIn_0.25s_ease-out]" role="alert">
+            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true" className="shrink-0">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+            <span>{validationError || error}</span>
+          </div>
+        )}
 
         {/* Submit Action */}
         <button

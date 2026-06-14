@@ -249,8 +249,7 @@ export function AuthProvider({ children }) {
       window.location.href = '/login';
     }
   };
-
-  const clearError = () => setError(null);
+  const clearError = useCallback(() => setError(null), []);
 
   const value = {
     user,
