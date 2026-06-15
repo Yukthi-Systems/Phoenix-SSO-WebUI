@@ -1,17 +1,20 @@
 import React, { createContext, useState, useEffect, useCallback, useRef } from 'react';
+import { useAtom } from 'jotai';
+import { userAtom, sessionExpirationAtom } from '../store/authStore';
 import authService from '../services/authService';
 import { getBrandName } from '../utils/security';
 
 export const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useAtom(userAtom);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [mfaPending, setMfaPending] = useState(false);
   const [mfaType, setMfaType] = useState(null); // 'email_otp' | 'authenticator_otp'
   const [tempToken, setTempToken] = useState(null); // MFA transaction context
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [sessionExpiration, setSessionExpiration] = useAtom(sessionExpirationAtom);
 
   const rotationIntervalRef = useRef(null);
   const isRotatingRef = useRef(false);
@@ -40,6 +43,9 @@ export function AuthProvider({ children }) {
         };
 
         setUser(userProfile);
+        if (data.expiration) {
+          setSessionExpiration(data.expiration);
+        }
         setIsAuthenticated(true);
         setError(null);
         return true;
@@ -55,7 +61,7 @@ export function AuthProvider({ children }) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [setUser]);
 
   useEffect(() => {
     checkSession();
@@ -83,6 +89,10 @@ export function AuthProvider({ children }) {
         setLoading(false);
         localStorage.setItem('sso_user_email', email);
         return { mfaRequired: true, mfaType: type };
+      }
+
+      if (data.expiration) {
+        setSessionExpiration(data.expiration);
       }
 
       // If no MFA is required, we validate session to fetch user profile
@@ -161,13 +171,16 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // Perform rotation on a background interval (e.g. every 4 minutes)
+  // Perform rotation on a background interval
   const rotateSessionAction = useCallback(async () => {
     if (isRotatingRef.current) return;
     isRotatingRef.current = true;
 
     try {
-      await authService.rotateSession();
+      const data = await authService.rotateSession();
+      if (data && data.expiration) {
+        setSessionExpiration(data.expiration);
+      }
       console.log('Background session cookies rotated successfully.');
     } catch (err) {
       console.error('Failed background session rotation:', err);
@@ -181,26 +194,45 @@ export function AuthProvider({ children }) {
     } finally {
       isRotatingRef.current = false;
     }
-  }, []);
+  }, [setUser]);
 
-  // Sets up rotation intervals when authenticated
+  // Sets up rotation timeouts based on expiration
   useEffect(() => {
     if (isAuthenticated) {
-      // Rotate every 4 minutes (240000 ms) to keep cookie active
-      rotationIntervalRef.current = setInterval(rotateSessionAction, 240000);
+      let timeUntilRotation = 240000; // default 4 minutes
+      
+      if (sessionExpiration) {
+        const now = Date.now();
+        const expTime = new Date(sessionExpiration).getTime();
+        
+        if (!isNaN(expTime)) {
+          // If expiration is a date string or timestamp
+          const diff = expTime - now;
+          if (diff > 0) {
+             timeUntilRotation = Math.max(diff - 60000, 10000); // 1 minute before expiration, min 10s
+          } else {
+             timeUntilRotation = 10000; // already expired? retry shortly or let it fail
+          }
+        } else if (typeof sessionExpiration === 'number') {
+          // If expiration is relative seconds
+          timeUntilRotation = Math.max((sessionExpiration * 1000) - 60000, 10000);
+        }
+      }
+
+      rotationIntervalRef.current = setTimeout(rotateSessionAction, timeUntilRotation);
     } else {
       if (rotationIntervalRef.current) {
-        clearInterval(rotationIntervalRef.current);
+        clearTimeout(rotationIntervalRef.current);
         rotationIntervalRef.current = null;
       }
     }
 
     return () => {
       if (rotationIntervalRef.current) {
-        clearInterval(rotationIntervalRef.current);
+        clearTimeout(rotationIntervalRef.current);
       }
     };
-  }, [isAuthenticated, rotateSessionAction]);
+  }, [isAuthenticated, sessionExpiration, rotateSessionAction]);
 
   // Log out action - resets state and forces clean reload
   const logoutAction = async () => {
@@ -241,7 +273,7 @@ export function AuthProvider({ children }) {
       }
 
       if (rotationIntervalRef.current) {
-        clearInterval(rotationIntervalRef.current);
+        clearTimeout(rotationIntervalRef.current);
         rotationIntervalRef.current = null;
       }
 
