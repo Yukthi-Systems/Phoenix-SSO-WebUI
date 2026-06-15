@@ -192,7 +192,7 @@ const authService = {
    * @param {string} app - The application identifier requesting session (e.g. "app1")
    */
   async generateSession(app) {
-    const response = await apiClient.post('/generate-session', { app });
+    const response = await apiClient.get('/auth/session');
     return response.data;
     // Expected response: { success: true }
   },

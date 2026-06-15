@@ -125,7 +125,7 @@ export default function Login() {
 
         {/* Email Form Group */}
         <div className="mb-5 flex flex-col relative">
-          <label className="text-sm font-medium mb-1.5 text-text-sub transition-colors" htmlFor="email">
+          <label className="text-left text-sm font-medium mb-1.5 text-text-sub transition-colors" htmlFor="email">
             Email Address
           </label>
           <div className="relative flex items-center">
