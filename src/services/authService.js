@@ -158,27 +158,6 @@ const authService = {
   },
 
   /**
-   * Verifies the 6-digit OTP code (2FA/MFA)
-   * @param {string} otpCode 
-   * @param {string} tempToken - Optional temporary token associated with the login attempt
-   */
-  async verifyOtp(otpCode, tempToken) {
-    const response = await apiClient.post('/verify-otp', { otpCode, tempToken });
-    return response.data;
-    // Expected response format:
-    // { success: true }
-  },
-
-  /**
-   * Requests a resend of the OTP code
-   * @param {string} tempToken - Optional temporary token associated with the session
-   */
-  async resendOtp(tempToken) {
-    const response = await apiClient.post('/resend-otp', { tempToken });
-    return response.data;
-  },
-
-  /**
    * Validates if the current SSO cookie session is active
    */
   async validateSession() {
@@ -198,15 +177,6 @@ const authService = {
   },
 
   /**
-   * Periodically rotates the active session cookies
-   */
-  async rotateSession() {
-    const response = await apiClient.post('/rotate-session');
-    return response.data;
-    // Expected response: { success: true }
-  },
-
-  /**
    * Triggers global logout
    */
   async logout() {
@@ -215,6 +185,66 @@ const authService = {
     });
     return response.data;
     // Expected response: { success: true }
+  },
+
+  /**
+   * Validates the 6-digit OTP code against the backend
+   * @param {string} otpType - 'app' | 'sms' | 'email'
+   * @param {string} otp - 6-digit code
+   */
+  async validateOtp(otpType, otp) {
+    const response = await apiClient.post(`/auth/otp/validate/${otpType}/${otp}`);
+    return response.data;
+  },
+
+  /**
+   * Triggers resending the OTP code
+   * @param {string} otpType - 'app' | 'sms' | 'email'
+   */
+  async resendOtp(otpType) {
+    const response = await apiClient.post(`/auth/otp/resend/${otpType}`);
+    return response.data;
+  },
+
+  /**
+   * Updates the last active timestamp on the server
+   */
+  async updateLastActive() {
+    const response = await apiClient.post('/auth/last-active');
+    return response.data;
+  },
+
+  /**
+   * Initiates a password reset flow by sending an OTP to the given email.
+   * The server sets an HttpOnly SSO-Reset-Token cookie on success.
+   * @param {string} email - The user's email address
+   */
+  async requestPasswordReset(email) {
+    const response = await apiClient.post('/auth/password-reset/request', { email });
+    return response.data;
+    // Expected response: { message: '...', email: 'masked email' }
+  },
+
+  /**
+   * Verifies the 6-digit OTP issued during requestPasswordReset.
+   * Requires the SSO-Reset-Token cookie set by the previous step.
+   * @param {string} otp - 6-digit OTP code entered by the user
+   */
+  async verifyPasswordResetOtp(otp) {
+    const response = await apiClient.post('/auth/password-reset/verify', { otp });
+    return response.data;
+    // Expected response: { message: '...' }
+  },
+
+  /**
+   * Finalises the password reset by submitting the new password.
+   * Requires the SSO-Reset-Token cookie to be in the verified state.
+   * @param {string} newPassword - The user's chosen new password
+   */
+  async confirmPasswordReset(newPassword) {
+    const response = await apiClient.post('/auth/password-reset/confirm', { new_password: newPassword });
+    return response.data;
+    // Expected response: { message: '...' }
   }
 };
 

@@ -16,9 +16,9 @@ export default function SessionCheck() {
 
   useEffect(() => {
     const runCheck = async () => {
-      // 1. Immediately check for SEO-Session-ID browser cookie
-      const hasSeoSession = document.cookie.split(';').some(item => item.trim().startsWith('SEO-Session-ID='));
-      if (hasSeoSession) {
+      // 1. Immediately check for SSO-Session-ID browser cookie
+      const hasSsoSession = document.cookie.split(';').some(item => item.trim().startsWith('SSO-Session-ID='));
+      if (hasSsoSession) {
         navigate('/success', { replace: true });
         return;
       }

@@ -23,9 +23,9 @@ export default function Login() {
   const targetOrigin = searchParams.get('origin');
 
   useEffect(() => {
-    // 1. Immediately check for SEO-Session-ID browser cookie
-    const hasSeoSession = document.cookie.split(';').some(item => item.trim().startsWith('SEO-Session-ID='));
-    if (hasSeoSession) {
+    // 1. Immediately check for SSO-Session-ID browser cookie
+    const hasSsoSession = document.cookie.split(';').some(item => item.trim().startsWith('SSO-Session-ID='));
+    if (hasSsoSession) {
       navigate('/success', { replace: true });
       return;
     }
@@ -95,9 +95,18 @@ export default function Login() {
     try {
       const result = await login(email, password);
       if (result.mfaRequired) {
-        // Send state details to the OTP verification page
-        const queryParams = new URLSearchParams(searchParams).toString();
-        navigate(`/verify-otp?${queryParams}`);
+        const enabledMethods = [];
+        if (result.is_app_2fa_enabled) enabledMethods.push('app');
+        if (result.is_sms_2fa_enabled) enabledMethods.push('sms');
+        if (result.is_email_2fa_enabled) enabledMethods.push('email');
+
+        const queryParams = new URLSearchParams(searchParams);
+        if (enabledMethods.length === 1) {
+          queryParams.set('mfa_type', enabledMethods[0]);
+          navigate(`/verify-otp?${queryParams.toString()}`);
+        } else {
+          navigate(`/mfa-verification?${queryParams.toString()}`);
+        }
       } else {
         // Set success message from API response
         const messageToShow = typeof result === 'string'
@@ -153,14 +162,12 @@ export default function Login() {
             <label className="text-sm font-medium text-text-sub transition-colors" htmlFor="password">
               Password
             </label>
-            <a
-              href={FORGOT_PASSWORD_URL}
+            <Link
+              to="/forgot-password"
               className="text-xs text-primary font-medium hover:text-primary-hover hover:underline"
-              target="_blank"
-              rel="noopener noreferrer"
             >
               Forgot password?
-            </a>
+            </Link>
           </div>
           <div className="relative flex items-center">
             <input

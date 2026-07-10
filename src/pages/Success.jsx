@@ -46,49 +46,144 @@ export default function Success() {
           </p>
         </div>
 
-        {/* User Information Card */}
-        <div className="w-full p-4 bg-black/15 border border-card-border rounded-xl text-left flex flex-col gap-4 transition-all duration-300 hover:border-white/10">
-          <div className="flex flex-col gap-1">
-            <span className="text-xs font-semibold uppercase tracking-wider text-text-muted">
-              Authenticated As
-            </span>
-            <span className="text-base font-medium text-text-sub truncate">
-              {displayEmail}
-            </span>
+        {/* Dashboard Grid Container */}
+        <div className="w-full flex flex-col gap-5 text-left">
+          
+          {/* Section 1: Account Profile */}
+          <div className="p-5 bg-black/20 border border-card-border rounded-2xl flex flex-col gap-4 transition-all duration-300 hover:border-primary/20 hover:shadow-[0_4px_20px_rgba(99,102,241,0.05)]">
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-primary flex items-center gap-2">
+              <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+              SSO Account Profile
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex flex-col gap-1">
+                <span className="text-xs text-text-muted">Email Address</span>
+                <span className="text-sm font-medium text-text-main truncate">{displayEmail}</span>
+              </div>
+
+              {((user && user.first_name) || (user && user.last_name)) && (
+                <div className="flex flex-col gap-1">
+                  <span className="text-xs text-text-muted">Display Name</span>
+                  <span className="text-sm font-medium text-text-main truncate">
+                    {[user?.first_name, user?.last_name].filter(Boolean).join(' ')}
+                  </span>
+                </div>
+              )}
+
+              {user && user.organization_name && (
+                <div className="flex flex-col gap-1 col-span-1 md:col-span-2 border-t border-card-border/50 pt-3">
+                  <span className="text-xs text-text-muted">Managed Organization</span>
+                  <span className="text-sm font-medium text-text-main truncate">{user.organization_name}</span>
+                </div>
+              )}
+
+              {user && user.primary_phone && (
+                <div className="flex flex-col gap-1 border-t border-card-border/50 pt-3">
+                  <span className="text-xs text-text-muted">Primary Phone</span>
+                  <span className="text-sm font-medium text-text-main truncate">{user.primary_phone}</span>
+                </div>
+              )}
+
+              {user && user.secondary_email && (
+                <div className="flex flex-col gap-1 border-t border-card-border/50 pt-3">
+                  <span className="text-xs text-text-muted">Secondary Email</span>
+                  <span className="text-sm font-medium text-text-main truncate">{user.secondary_email}</span>
+                </div>
+              )}
+            </div>
           </div>
 
-          {((user && user.first_name) || (user && user.last_name)) && (
-            <div className="flex flex-col gap-1">
-              <span className="text-xs font-semibold uppercase tracking-wider text-text-muted">
-                Name
-              </span>
-              <span className="text-sm font-medium text-text-sub truncate">
-                {[user?.first_name, user?.last_name].filter(Boolean).join(' ')}
-              </span>
-            </div>
-          )}
+          {/* Section 2: Security & MFA Settings */}
+          <div className="p-5 bg-black/20 border border-card-border rounded-2xl flex flex-col gap-4 transition-all duration-300 hover:border-accent/20 hover:shadow-[0_4px_20px_rgba(170,59,255,0.05)]">
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-accent flex items-center gap-2">
+              <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+              Multi-Factor Authentication
+            </h3>
 
-          {user && user.organization_name && (
-            <div className="flex flex-col gap-1">
-              <span className="text-xs font-semibold uppercase tracking-wider text-text-muted">
-                Organization
-              </span>
-              <span className="text-sm font-medium text-text-sub truncate">
-                {user.organization_name}
-              </span>
-            </div>
-          )}
+            <div className="flex flex-col gap-3">
+              {/* Authenticator App */}
+              <div className="flex items-center justify-between p-3 bg-white/5 border border-card-border/40 rounded-xl">
+                <div className="flex items-center gap-3">
+                  <div className="text-text-sub">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+                      <line x1="12" y1="18" x2="12.01" y2="18"></line>
+                    </svg>
+                  </div>
+                  <div>
+                    <div className="text-sm font-medium text-text-main">Authenticator App</div>
+                    <div className="text-xs text-text-muted">TOTP verification code</div>
+                  </div>
+                </div>
+                {user && user.is_app_2fa_enabled ? (
+                  <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-success/10 text-success border border-success/20 flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse"></span> Active
+                  </span>
+                ) : (
+                  <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-white/5 text-text-muted border border-card-border/50">
+                    Inactive
+                  </span>
+                )}
+              </div>
 
-          {user && user.primary_phone && (
-            <div className="flex flex-col gap-1">
-              <span className="text-xs font-semibold uppercase tracking-wider text-text-muted">
-                Phone
-              </span>
-              <span className="text-sm font-medium text-text-sub truncate">
-                {user.primary_phone}
-              </span>
+              {/* SMS OTP */}
+              <div className="flex items-center justify-between p-3 bg-white/5 border border-card-border/40 rounded-xl">
+                <div className="flex items-center gap-3">
+                  <div className="text-text-sub">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                  </div>
+                  <div>
+                    <div className="text-sm font-medium text-text-main">SMS Verification</div>
+                    <div className="text-xs text-text-muted">Secure SMS code</div>
+                  </div>
+                </div>
+                {user && user.is_sms_2fa_enabled ? (
+                  <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-success/10 text-success border border-success/20 flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse"></span> Active
+                  </span>
+                ) : (
+                  <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-white/5 text-text-muted border border-card-border/50">
+                    Inactive
+                  </span>
+                )}
+              </div>
+
+              {/* Email OTP */}
+              <div className="flex items-center justify-between p-3 bg-white/5 border border-card-border/40 rounded-xl">
+                <div className="flex items-center gap-3">
+                  <div className="text-text-sub">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                      <polyline points="22,6 12,13 2,6"></polyline>
+                    </svg>
+                  </div>
+                  <div>
+                    <div className="text-sm font-medium text-text-main">Email Verification</div>
+                    <div className="text-xs text-text-muted">Backup email code</div>
+                  </div>
+                </div>
+                {user && user.is_email_2fa_enabled ? (
+                  <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-success/10 text-success border border-success/20 flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse"></span> Active
+                  </span>
+                ) : (
+                  <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-white/5 text-text-muted border border-card-border/50">
+                    Inactive
+                  </span>
+                )}
+              </div>
             </div>
-          )}
+          </div>
+
         </div>
 
         {/* Action Button */}

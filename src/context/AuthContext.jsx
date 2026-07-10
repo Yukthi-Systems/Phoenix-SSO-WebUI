@@ -12,12 +12,11 @@ export function AuthProvider({ children }) {
   const [mfaPending, setMfaPending] = useState(false);
   const [mfaType, setMfaType] = useState(null); // 'email_otp' | 'authenticator_otp'
   const [tempToken, setTempToken] = useState(null); // MFA transaction context
+  const [tempMfaData, setTempMfaData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [sessionExpiration, setSessionExpiration] = useAtom(sessionExpirationAtom);
 
-  const rotationIntervalRef = useRef(null);
-  const isRotatingRef = useRef(false);
 
   // Checks for existing session cookie on mount
   const checkSession = useCallback(async () => {
@@ -32,6 +31,11 @@ export function AuthProvider({ children }) {
 
       if (isValid) {
         const storedEmail = localStorage.getItem('sso_user_email');
+        const storedIsApp2fa = localStorage.getItem('sso_user_is_app_2fa') === 'true';
+        const storedIsSms2fa = localStorage.getItem('sso_user_is_sms_2fa') === 'true';
+        const storedIsEmail2fa = localStorage.getItem('sso_user_is_email_2fa') === 'true';
+        const storedPhone = localStorage.getItem('sso_user_primary_phone');
+        const storedSecEmail = localStorage.getItem('sso_user_secondary_email');
 
         // Map user profile from the top-level response if data.user is not available
         const userProfile = data.user || {
@@ -39,7 +43,12 @@ export function AuthProvider({ children }) {
           first_name: data.first_name,
           last_name: data.last_name,
           organization_id: data.organization_id,
-          organization_name: data.organization_name
+          organization_name: data.organization_name,
+          primary_phone: data.primary_phone !== undefined ? data.primary_phone : (storedPhone || ''),
+          secondary_email: data.secondary_email !== undefined ? data.secondary_email : (storedSecEmail || ''),
+          is_app_2fa_enabled: data.is_app_2fa_enabled !== undefined ? data.is_app_2fa_enabled : storedIsApp2fa,
+          is_sms_2fa_enabled: data.is_sms_2fa_enabled !== undefined ? data.is_sms_2fa_enabled : storedIsSms2fa,
+          is_email_2fa_enabled: data.is_email_2fa_enabled !== undefined ? data.is_email_2fa_enabled : storedIsEmail2fa,
         };
 
         setUser(userProfile);
@@ -74,29 +83,43 @@ export function AuthProvider({ children }) {
       setError(null);
       const data = await authService.login(email, password, rememberMe);
 
-      const requiresMfa = data.requiresMfa || data.is_app_2fa_enabled || data.is_email_2fa_enabled || data.is_sms_2fa_enabled;
+      // Check if 2FA verification is required
+      if (data && data.message === 'OTP verification required') {
+        localStorage.setItem('sso_user_email', data.email || email);
+        localStorage.setItem('sso_user_is_app_2fa', data.is_app_2fa_enabled ? 'true' : 'false');
+        localStorage.setItem('sso_user_is_sms_2fa', data.is_sms_2fa_enabled ? 'true' : 'false');
+        localStorage.setItem('sso_user_is_email_2fa', data.is_email_2fa_enabled ? 'true' : 'false');
+        localStorage.setItem('sso_user_primary_phone', data.primary_phone || '');
+        localStorage.setItem('sso_user_secondary_email', data.secondary_email || '');
 
-      if (requiresMfa) {
+        setTempMfaData({
+          email: data.email || email,
+          first_name: data.first_name,
+          last_name: data.last_name,
+          primary_phone: data.primary_phone,
+          secondary_email: data.secondary_email,
+          is_app_2fa_enabled: data.is_app_2fa_enabled,
+          is_sms_2fa_enabled: data.is_sms_2fa_enabled,
+          is_email_2fa_enabled: data.is_email_2fa_enabled,
+          organization_id: data.organization_id,
+          organization_name: data.organization_name,
+        });
         setMfaPending(true);
-        let type = data.mfaType || 'email_otp';
-        if (!data.mfaType) {
-          if (data.is_app_2fa_enabled) type = 'authenticator_otp';
-          else if (data.is_sms_2fa_enabled) type = 'sms_otp';
-          else if (data.is_email_2fa_enabled) type = 'email_otp';
-        }
-        setMfaType(type);
-        setTempToken(data.tempToken || null);
         setLoading(false);
-        localStorage.setItem('sso_user_email', email);
-        return { mfaRequired: true, mfaType: type };
+        return { mfaRequired: true, ...data };
       }
 
       if (data.expiration) {
         setSessionExpiration(data.expiration);
       }
 
-      // If no MFA is required, we validate session to fetch user profile
-      localStorage.setItem('sso_user_email', email);
+      localStorage.setItem('sso_user_email', data.email || email);
+      localStorage.setItem('sso_user_is_app_2fa', data.is_app_2fa_enabled ? 'true' : 'false');
+      localStorage.setItem('sso_user_is_sms_2fa', data.is_sms_2fa_enabled ? 'true' : 'false');
+      localStorage.setItem('sso_user_is_email_2fa', data.is_email_2fa_enabled ? 'true' : 'false');
+      localStorage.setItem('sso_user_primary_phone', data.primary_phone || '');
+      localStorage.setItem('sso_user_secondary_email', data.secondary_email || '');
+
       const ok = await checkSession();
       if (!ok) {
         console.warn('Session verification failed after login. Falling back to local state to support local development cookie restrictions.');
@@ -107,7 +130,10 @@ export function AuthProvider({ children }) {
           organization_id: data.organization_id,
           organization_name: data.organization_name,
           primary_phone: data.primary_phone,
-          secondary_email: data.secondary_email
+          secondary_email: data.secondary_email,
+          is_app_2fa_enabled: data.is_app_2fa_enabled,
+          is_sms_2fa_enabled: data.is_sms_2fa_enabled,
+          is_email_2fa_enabled: data.is_email_2fa_enabled,
         });
         setIsAuthenticated(true);
       } else {
@@ -119,7 +145,10 @@ export function AuthProvider({ children }) {
           organization_id: prev?.organization_id || data.organization_id,
           organization_name: prev?.organization_name || data.organization_name,
           primary_phone: prev?.primary_phone || data.primary_phone,
-          secondary_email: prev?.secondary_email || data.secondary_email
+          secondary_email: prev?.secondary_email || data.secondary_email,
+          is_app_2fa_enabled: prev?.is_app_2fa_enabled || data.is_app_2fa_enabled,
+          is_sms_2fa_enabled: prev?.is_sms_2fa_enabled || data.is_sms_2fa_enabled,
+          is_email_2fa_enabled: prev?.is_email_2fa_enabled || data.is_email_2fa_enabled,
         }));
       }
 
@@ -135,104 +164,56 @@ export function AuthProvider({ children }) {
   };
 
   // Verifies the OTP (2FA/MFA)
-  const verifyOtpAction = async (otpCode) => {
+  const verifyOtpAction = useCallback(async (otpType, otpCode) => {
     try {
       setLoading(true);
       setError(null);
-      await authService.verifyOtp(otpCode, tempToken);
-
-      // OTP verified successfully, load active session
+      const response = await authService.validateOtp(otpType, otpCode);
+      
       const ok = await checkSession();
       if (!ok) {
-        throw new Error('OTP verified but session validation failed.');
+        console.warn('Session check failed after OTP validation. Falling back to local state.');
+        if (tempMfaData) {
+          setUser({
+            email: tempMfaData.email,
+            first_name: tempMfaData.first_name,
+            last_name: tempMfaData.last_name,
+            organization_id: tempMfaData.organization_id,
+            organization_name: tempMfaData.organization_name,
+            primary_phone: tempMfaData.primary_phone,
+            secondary_email: tempMfaData.secondary_email,
+            is_app_2fa_enabled: tempMfaData.is_app_2fa_enabled,
+            is_sms_2fa_enabled: tempMfaData.is_sms_2fa_enabled,
+            is_email_2fa_enabled: tempMfaData.is_email_2fa_enabled,
+          });
+        }
+        setIsAuthenticated(true);
       }
-
-      // Clear MFA transient state
       setMfaPending(false);
-      setMfaType(null);
-      setTempToken(null);
-      return { success: true };
+      setTempMfaData(null);
+      return { success: true, message: response.message || 'OTP validated successfully' };
     } catch (err) {
-      setError(err.message || 'OTP verification failed. Please try again.');
-      setLoading(false);
+      setError(err.message || 'OTP Verification failed.');
       throw err;
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [checkSession, setUser, tempMfaData]);
 
   // Resend OTP code
-  const resendOtpAction = async () => {
+  const resendOtpAction = useCallback(async (otpType) => {
     try {
+      setLoading(true);
       setError(null);
-      await authService.resendOtp(tempToken);
-      return { success: true };
+      const response = await authService.resendOtp(otpType);
+      return { success: true, message: response.message || 'OTP resent successfully' };
     } catch (err) {
-      setError(err.message || 'Failed to resend verification code.');
+      setError(err.message || 'Failed to resend code.');
       throw err;
-    }
-  };
-
-  // Perform rotation on a background interval
-  const rotateSessionAction = useCallback(async () => {
-    if (isRotatingRef.current) return;
-    isRotatingRef.current = true;
-
-    try {
-      const data = await authService.rotateSession();
-      if (data && data.expiration) {
-        setSessionExpiration(data.expiration);
-      }
-      console.log('Background session cookies rotated successfully.');
-    } catch (err) {
-      console.error('Failed background session rotation:', err);
-      // If 401 occurs during rotation, session expired
-      if (err.code === 'SESSION_EXPIRED') {
-        setIsAuthenticated(false);
-        setUser(null);
-        // Force session expired page redirect
-        window.location.href = '/session-expired';
-      }
     } finally {
-      isRotatingRef.current = false;
+      setLoading(false);
     }
-  }, [setUser]);
-
-  // Sets up rotation timeouts based on expiration
-  useEffect(() => {
-    if (isAuthenticated) {
-      let timeUntilRotation = 240000; // default 4 minutes
-      
-      if (sessionExpiration) {
-        const now = Date.now();
-        const expTime = new Date(sessionExpiration).getTime();
-        
-        if (!isNaN(expTime)) {
-          // If expiration is a date string or timestamp
-          const diff = expTime - now;
-          if (diff > 0) {
-             timeUntilRotation = Math.max(diff - 60000, 10000); // 1 minute before expiration, min 10s
-          } else {
-             timeUntilRotation = 10000; // already expired? retry shortly or let it fail
-          }
-        } else if (typeof sessionExpiration === 'number') {
-          // If expiration is relative seconds
-          timeUntilRotation = Math.max((sessionExpiration * 1000) - 60000, 10000);
-        }
-      }
-
-      rotationIntervalRef.current = setTimeout(rotateSessionAction, timeUntilRotation);
-    } else {
-      if (rotationIntervalRef.current) {
-        clearTimeout(rotationIntervalRef.current);
-        rotationIntervalRef.current = null;
-      }
-    }
-
-    return () => {
-      if (rotationIntervalRef.current) {
-        clearTimeout(rotationIntervalRef.current);
-      }
-    };
-  }, [isAuthenticated, sessionExpiration, rotateSessionAction]);
+  }, []);
 
   // Log out action - resets state and forces clean reload
   const logoutAction = async () => {
@@ -272,15 +253,42 @@ export function AuthProvider({ children }) {
         }
       }
 
-      if (rotationIntervalRef.current) {
-        clearTimeout(rotationIntervalRef.current);
-        rotationIntervalRef.current = null;
-      }
 
       // Crucial: Clear session details in context, redirect to login
       window.location.href = '/login';
     }
   };
+
+  // Activity tracking hook to notify the backend about user activity
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    let lastUpdated = 0;
+    const throttleInterval = 60 * 1000; // 1 minute throttle
+
+    const updateActivity = async () => {
+      const now = Date.now();
+      if (now - lastUpdated > throttleInterval) {
+        lastUpdated = now;
+        try {
+          await authService.updateLastActive();
+        } catch (err) {
+          console.warn('Failed to update session last-active status:', err);
+        }
+      }
+    };
+
+    // Listen to common user interactions
+    const events = ['mousedown', 'keydown', 'scroll', 'touchstart'];
+    events.forEach(e => window.addEventListener(e, updateActivity, { passive: true }));
+
+    // Also trigger immediately on mount/authenticated
+    updateActivity();
+
+    return () => {
+      events.forEach(e => window.removeEventListener(e, updateActivity));
+    };
+  }, [isAuthenticated]);
 
   const clearError = () => setError(null);
 
@@ -290,6 +298,8 @@ export function AuthProvider({ children }) {
     mfaPending,
     mfaType,
     tempToken,
+    tempMfaData,
+    setTempMfaData,
     loading,
     error,
     login: loginAction,

@@ -28,27 +28,35 @@ apiClient.interceptors.response.use(
 
     // Handle global expired session state (401)
     if (status === 401) {
-      // Clear client-accessible cookies
-      document.cookie.split(";").forEach((c) => {
-        document.cookie = c
-          .replace(/^ +/, "")
-          .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
-      });
+      const requestUrl = error.config?.url || '';
 
-      // Avoid redirecting if already on login page or if the request was to the login endpoint
-      if (
-        window.location.pathname !== '/login' &&
-        (!error.config?.url?.includes('/auth/login')) &&
-        (!error.config?.url?.includes('/auth/logout'))
-      ) {
-        window.location.href = '/login';
+      // OTP endpoints legitimately return 401 for wrong/expired codes.
+      // Do NOT redirect — surface the error message to the screen instead.
+      const isOtpEndpoint = requestUrl.includes('/auth/otp/');
+
+      if (!isOtpEndpoint) {
+        // Clear client-accessible cookies
+        document.cookie.split(";").forEach((c) => {
+          document.cookie = c
+            .replace(/^ +/, "")
+            .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+        });
+
+        // Avoid redirecting if already on login page or if the request was to the login endpoint
+        if (
+          window.location.pathname !== '/login' &&
+          (!error.config?.url?.includes('/auth/login')) &&
+          (!error.config?.url?.includes('/auth/logout'))
+        ) {
+          window.location.href = '/login';
+        }
       }
 
       // Return a structured error response that can be handled locally
       return Promise.reject({
         status,
-        message: (typeof data === 'string' ? data : (data?.error || data?.message || data?.detail)) || 'Your security session has expired.',
-        code: 'SESSION_EXPIRED',
+        message: (typeof data === 'string' ? data : (data?.error || data?.message || data?.detail)) || (isOtpEndpoint ? 'Invalid or expired OTP code.' : 'Your security session has expired.'),
+        code: isOtpEndpoint ? 'OTP_ERROR' : 'SESSION_EXPIRED',
         originalError: error,
       });
     }
