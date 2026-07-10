@@ -1,4 +1,5 @@
 import apiClient from '../api/client';
+import axios from 'axios';
 
 function getDeviceDetails(ipAddress = '') {
   const ua = navigator.userAgent;
@@ -216,33 +217,29 @@ const authService = {
 
   /**
    * Initiates a password reset flow by sending an OTP to the given email.
-   * The server sets an HttpOnly SSO-Reset-Token cookie on success.
    * @param {string} email - The user's email address
+   * @param {string} verify_via - Method to verify, default to 'email'
+   * @param {string} recaptcha_token - Optional recaptcha token
    */
-  async requestPasswordReset(email) {
-    const response = await apiClient.post('/auth/password-reset/request', { email });
+  async requestPasswordReset(email, verify_via = 'email', recaptcha_token = '') {
+    const response = await axios.post(`https://v3-admin-api.test.yukthi.net/identities/reset/password/${email}/init?verify_via=${verify_via}&recaptcha_token=${recaptcha_token}`);
     return response.data;
-    // Expected response: { message: '...', email: 'masked email' }
+    // Expected response: { message: '...', verify_via: 'email' }
   },
 
   /**
-   * Verifies the 6-digit OTP issued during requestPasswordReset.
-   * Requires the SSO-Reset-Token cookie set by the previous step.
+   * Finalises the password reset by submitting the OTP and new password.
+   * @param {string} email - The user's email address
    * @param {string} otp - 6-digit OTP code entered by the user
-   */
-  async verifyPasswordResetOtp(otp) {
-    const response = await apiClient.post('/auth/password-reset/verify', { otp });
-    return response.data;
-    // Expected response: { message: '...' }
-  },
-
-  /**
-   * Finalises the password reset by submitting the new password.
-   * Requires the SSO-Reset-Token cookie to be in the verified state.
    * @param {string} newPassword - The user's chosen new password
+   * @param {string} verify_via - Method to verify, default to 'email'
    */
-  async confirmPasswordReset(newPassword) {
-    const response = await apiClient.post('/auth/password-reset/confirm', { new_password: newPassword });
+  async completePasswordReset(email, otp, newPassword, verify_via = 'email') {
+    const response = await axios.post(`https://v3-admin-api.test.yukthi.net/identities/reset/password/${email}/complete`, {
+      otp: otp,
+      new_password_base64: btoa(newPassword),
+      verify_via: verify_via
+    });
     return response.data;
     // Expected response: { message: '...' }
   }
