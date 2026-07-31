@@ -15,13 +15,13 @@
  * <https://www.gnu.org/licenses/>.
  */
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import AuthLayout from '../layouts/AuthLayout';
-import { isValidOrigin, sanitizeRedirectUrl, getBrandName } from '../utils/security';
-import { FORGOT_PASSWORD_URL } from '../const/contants';
+import { isValidOrigin, sanitizeRedirectUrl } from '../utils/security';
 import toast from 'react-hot-toast';
+import type { ApiError } from '../types';
 
 export default function Login() {
   const { login, isAuthenticated, error, clearError, loading } = useAuth();
@@ -60,6 +60,7 @@ export default function Login() {
     if (isAuthenticated && !loading) {
       handleSuccessNavigation();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, loading]);
 
   const handleSuccessNavigation = () => {
@@ -105,7 +106,7 @@ export default function Login() {
     return true;
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!validateForm()) return;
 
@@ -137,8 +138,8 @@ export default function Login() {
       }
     } catch (err) {
       // Error handled by AuthContext state
-      setValidationError(err?.message)
-      console.log('Authentication failed:', err?.message);
+      setValidationError((err as ApiError)?.message || '')
+      console.log('Authentication failed:', (err as ApiError)?.message);
     }
   };
 

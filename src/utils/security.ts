@@ -19,7 +19,7 @@
  * Security utility helpers for the SSO Frontend UI
  */
 
-export function getBaseDomain() {
+export function getBaseDomain(): string {
   if (typeof window === 'undefined') return '';
   const host = window.location.hostname;
   if (!host || host === 'localhost' || host === '127.0.0.1') {
@@ -32,7 +32,7 @@ export function getBaseDomain() {
   return host;
 }
 
-export function getBrandName() {
+export function getBrandName(): string {
   // Use environment variable for white-labeling, or fallback to generic name
   if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_BRAND_NAME) {
     return import.meta.env.VITE_BRAND_NAME;
@@ -50,16 +50,13 @@ const ALLOWED_ORIGIN_PATTERNS = [
 /**
  * Validates whether the given origin is part of the permitted client applications.
  * This is critical to prevent postMessage theft or open redirects.
- * 
- * @param {string} origin - The origin to validate
- * @returns {boolean} True if origin is whitelist-approved
  */
-export function isValidOrigin(origin) {
+export function isValidOrigin(origin: string | null | undefined): boolean {
   if (!origin) return false;
-  
+
   // Normalize origin (remove trailing slash)
   const normalized = origin.replace(/\/$/, '');
-  
+
   if (ALLOWED_ORIGIN_PATTERNS.some((pattern) => pattern.test(normalized))) {
     return true;
   }
@@ -78,13 +75,10 @@ export function isValidOrigin(origin) {
 }
 
 /**
- * Validates and sanitizes redirect URLs to prevent Open Redirect vulnerabilities 
+ * Validates and sanitizes redirect URLs to prevent Open Redirect vulnerabilities
  * and script insertion (javascript: schemes).
- * 
- * @param {string} urlString - The destination URL string to validate
- * @returns {string} The validated absolute URL, or safe fallback (login route)
  */
-export function sanitizeRedirectUrl(urlString) {
+export function sanitizeRedirectUrl(urlString: string | null | undefined): string {
   if (!urlString) return '/login';
 
   try {
@@ -94,7 +88,7 @@ export function sanitizeRedirectUrl(urlString) {
     }
 
     const parsed = new URL(urlString);
-    
+
     // 1. Enforce secure protocols
     if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
       console.warn('Blocked dangerous URL protocol:', parsed.protocol);
@@ -117,17 +111,14 @@ export function sanitizeRedirectUrl(urlString) {
 /**
  * Masks user email addresses to prevent PII exposure on MFA validation screens.
  * E.g., "john.doe@example.com" -> "jo******@example.com"
- * 
- * @param {string} email - The raw email address
- * @returns {string} The masked email address
  */
-export function maskEmail(email) {
+export function maskEmail(email: string | null | undefined): string {
   if (!email || !email.includes('@')) return 'your email';
-  
+
   const [localPart, domain] = email.split('@');
   if (localPart.length <= 2) {
     return `${localPart[0]}***@${domain}`;
   }
-  
+
   return `${localPart.substring(0, 2)}******@${domain}`;
 }

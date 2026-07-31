@@ -15,10 +15,10 @@
  * <https://www.gnu.org/licenses/>.
  */
 
-import React from 'react';
 import { useAuth } from '../hooks/useAuth';
 import AuthLayout from '../layouts/AuthLayout';
 import { maskEmail, getBrandName } from '../utils/security';
+import type { ApiError } from '../types';
 
 export default function Success() {
   const { user, logout, loading } = useAuth();
@@ -27,7 +27,7 @@ export default function Success() {
     try {
       await logout();
     } catch (err) {
-      console.warn('Logout failed:', err.message);
+      console.warn('Logout failed:', (err as ApiError).message);
     }
   };
 
@@ -36,16 +36,16 @@ export default function Success() {
   return (
     <AuthLayout>
       <div className="text-center py-4 flex flex-col items-center gap-6 animate-[fadeIn_0.3s_ease-out]">
-        
+
         {/* Animated Checkmark Circle */}
         <div className="relative flex items-center justify-center w-16 h-16 rounded-full bg-success/10 text-success border border-success/20 shadow-[0_0_25px_rgba(34,195,93,0.15)] animate-[pulse_2s_infinite]">
-          <svg 
-            width="32" 
-            height="32" 
-            fill="none" 
-            stroke="currentColor" 
-            strokeWidth="3" 
-            viewBox="0 0 24 24" 
+          <svg
+            width="32"
+            height="32"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="3"
+            viewBox="0 0 24 24"
             aria-hidden="true"
             className="animate-[scaleIn_0.25s_cubic-bezier(0.175,0.885,0.32,1.275)]"
           >
@@ -65,7 +65,7 @@ export default function Success() {
 
         {/* Dashboard Grid Container */}
         <div className="w-full flex flex-col gap-5 text-left">
-          
+
           {/* Section 1: Account Profile */}
           <div className="p-5 bg-black/20 border border-card-border rounded-2xl flex flex-col gap-4 transition-all duration-300 hover:border-primary/20 hover:shadow-[0_4px_20px_rgba(99,102,241,0.05)]">
             <h3 className="text-sm font-semibold uppercase tracking-wider text-primary flex items-center gap-2">
@@ -75,7 +75,7 @@ export default function Success() {
               </svg>
               SSO Account Profile
             </h3>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex flex-col gap-1">
                 <span className="text-xs text-text-muted">Email Address</span>

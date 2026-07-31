@@ -15,7 +15,7 @@
  * <https://www.gnu.org/licenses/>.
  */
 
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import AuthLayout from '../layouts/AuthLayout';
 import { isValidOrigin } from '../utils/security';
@@ -43,7 +43,7 @@ export default function SessionExpired() {
     <AuthLayout>
       <div className="text-center">
         {/* Clock/expired icon */}
-        <div 
+        <div
           className="w-14 h-14 rounded-full bg-warning/10 text-warning flex items-center justify-center mx-auto mb-5"
         >
           <svg width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
@@ -59,8 +59,8 @@ export default function SessionExpired() {
           Your active security session has expired due to inactivity. Please sign in again to continue.
         </p>
 
-        <button 
-          type="button" 
+        <button
+          type="button"
           className="w-full py-3 px-6 text-base font-semibold rounded-xl cursor-pointer transition-all flex justify-center items-center gap-2 relative overflow-hidden bg-primary text-white shadow-sm hover:bg-primary-hover hover:shadow-[0_0_20px_rgba(99,102,241,0.25)] focus:outline-none focus:ring-4 focus:ring-primary/20"
           onClick={handleLoginClick}
         >

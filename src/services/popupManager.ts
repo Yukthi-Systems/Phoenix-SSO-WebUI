@@ -16,21 +16,30 @@
  */
 
 import { isValidOrigin } from '../utils/security';
+import type { PopupAuthResult, SsoMessage } from '../types';
+
+interface PopupManager {
+  activePopup: Window | null;
+  messageListener: ((event: MessageEvent) => void) | null;
+  pollTimer: ReturnType<typeof setInterval> | null;
+  openLoginPopup(ssoUrl: string, appName: string): Promise<PopupAuthResult>;
+  cleanup(): void;
+}
 
 /**
  * Reusable Popup Authentication Manager for client apps to integrate with the SSO platform.
  */
-export const popupManager = {
+export const popupManager: PopupManager = {
   activePopup: null,
   messageListener: null,
   pollTimer: null,
 
   /**
    * Opens the SSO popup and waits for authentication result.
-   * 
-   * @param {string} ssoUrl - The centralized SSO base URL (e.g. "https://sso.example.com")
-   * @param {string} appName - The client application name (e.g. "app1")
-   * @returns {Promise<object>} Resolves on auth success, rejects on failure or closure
+   *
+   * @param ssoUrl - The centralized SSO base URL (e.g. "https://sso.example.com")
+   * @param appName - The client application name (e.g. "app1")
+   * @returns Resolves on auth success, rejects on failure or closure
    */
   openLoginPopup(ssoUrl, appName) {
     return new Promise((resolve, reject) => {
@@ -62,13 +71,13 @@ export const popupManager = {
       }
 
       // 5. Setup postMessage event listener
-      this.messageListener = (event) => {
+      this.messageListener = (event: MessageEvent) => {
         // Validate origin
         if (!isValidOrigin(event.origin) && event.origin !== ssoUrl) {
           return;
         }
 
-        const data = event.data;
+        const data = event.data as SsoMessage | undefined;
         if (!data || typeof data !== 'object') return;
 
         if (data.type === 'SSO_AUTH_SUCCESS') {
