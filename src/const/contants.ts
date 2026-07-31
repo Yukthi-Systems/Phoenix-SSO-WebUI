@@ -1,10 +1,37 @@
-const getEnv = (key: string, defaultValue: string) => {
-    if (typeof window !== 'undefined' && window._env_ && window._env_[key]) {
-        return window._env_[key]
+/*
+ * Copyright (C) 2026 Yukthi Systems Private Limited
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * version 3 along with this program. If not, see
+ * <https://www.gnu.org/licenses/>.
+ */
+
+declare global {
+    interface Window {
+        _env_?: Record<string, string>
     }
-    return import.meta.env[key] || defaultValue
 }
 
-export const API_URL = getEnv('API_URL', 'https://sso.yukthi.net');
-export const SSO_URL = getEnv('SSO_URL', 'https://sso.yukthi.net');
-export const FORGOT_PASSWORD_URL = getEnv('FORGOT_PASSWORD_URL', 'https://v3-admin-ui.test.yukthi.net/reset/admin');
+const getEnv = (key: string): string => {
+    const value = (typeof window !== 'undefined' && window._env_ && window._env_[key])
+        || import.meta.env[key]
+
+    if (!value) {
+        throw new Error(`Missing required environment variable: ${key}`)
+    }
+
+    return value
+}
+
+export const API_URL = getEnv('VITE_API_URL');
+export const SSO_URL = getEnv('VITE_SSO_URL');
+export const FORGOT_PASSWORD_URL = getEnv('VITE_FORGOT_PASSWORD_URL');

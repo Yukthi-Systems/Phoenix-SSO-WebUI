@@ -1,11 +1,9 @@
-services: 
-  v3-sso-ui:
-    image: rjyspl/v3-sso-ui:latest
-    container_name: v3-sso-ui
-    environment:
-      - NODE_ENV=production
-      - VITE_API_URL=https://sso.yukthi.net
-      - VITE_SSO_URL=https://sso.yukthi.net
+services:
+  phoenix-sso-ui:
+    image: rjyspl/phoenix-sso-ui:latest
+    container_name: phoenix-sso-ui
+    env_file:
+      - .env
 
     ports:
       - '127.0.0.1:3000:3000'
