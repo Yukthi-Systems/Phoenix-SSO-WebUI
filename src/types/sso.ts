@@ -32,7 +32,7 @@ export interface DeviceDetails {
   secChUaPlatform: string;
   hardwareConcurrency: number | string;
   deviceMemory: number | string;
-  connectionType: string;
+  connectionType: string | undefined;
   cookieEnabled: boolean;
   doNotTrack: string;
   maxTouchPoints: number;

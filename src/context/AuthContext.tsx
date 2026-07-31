@@ -156,8 +156,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setIsAuthenticated(true);
       } else {
         // Since session check might not return full user info, we can augment it
-        setUser(prev => (prev ? {
-          ...prev,
+        // Spreading `prev ?? {}` matches the original's `...prev` (spreading null is a
+        // no-op in JS) while satisfying the type checker; cast since prev may lack
+        // `email` here exactly like the original untyped object could.
+        setUser(prev => ({
+          ...(prev ?? {}),
           first_name: prev?.first_name || data.first_name,
           last_name: prev?.last_name || data.last_name,
           organization_id: prev?.organization_id || data.organization_id,
@@ -167,7 +170,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           is_app_2fa_enabled: prev?.is_app_2fa_enabled || data.is_app_2fa_enabled,
           is_sms_2fa_enabled: prev?.is_sms_2fa_enabled || data.is_sms_2fa_enabled,
           is_email_2fa_enabled: prev?.is_email_2fa_enabled || data.is_email_2fa_enabled,
-        } : prev));
+        } as User));
       }
 
       const message = typeof data === 'string'

@@ -78,7 +78,7 @@ function getDeviceDetails(ipAddress = ''): DeviceDetails {
 
   const hardwareConcurrency = navigator.hardwareConcurrency || 'Unknown';
   const deviceMemory = navigator.deviceMemory || 'Unknown';
-  const connectionType = navigator.connection ? navigator.connection.effectiveType || 'Unknown' : 'Unknown';
+  const connectionType = navigator.connection ? navigator.connection.effectiveType : 'Unknown';
   const cookieEnabled = navigator.cookieEnabled;
   const doNotTrack = navigator.doNotTrack || 'Unknown';
   const maxTouchPoints = navigator.maxTouchPoints || 0;
