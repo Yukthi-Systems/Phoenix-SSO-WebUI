@@ -1,6 +1,6 @@
 # @rjyspl/phoenix-sso-react
 
-React SDK for Yukthi's Single Sign-On service. Add SSO to any React app by installing and importing — no need to hand-roll the popup/`postMessage` handshake against the SSO service yourself.
+React SDK for adding SSO to any app by installing and importing — no need to hand-roll the popup/`postMessage` handshake against your SSO service yourself. Works with any SSO service that speaks this package's popup/redirect + `postMessage` protocol (see [Wire protocol](#wire-protocol) below).
 
 Two ways to use it, depending on whether your app already has its own session/token system:
 
@@ -17,7 +17,7 @@ npm install @rjyspl/phoenix-sso-react
 
 ## Framework-free primitives
 
-If your app already has its own auth context, token storage, and refresh logic (most Yukthi apps do), you likely only need these — no `<SSOProvider>`, no new state machine:
+If your app already has its own auth context, token storage, and refresh logic, you likely only need these — no `<SSOProvider>`, no new state machine:
 
 ```ts
 import { openLoginPopup, redirectToLogin, ssoLogout, PopupBlockedError } from '@rjyspl/phoenix-sso-react';
@@ -25,14 +25,14 @@ import { openLoginPopup, redirectToLogin, ssoLogout, PopupBlockedError } from '@
 async function loginWithSso() {
   try {
     // Opens the popup, resolves once the SSO service posts back success.
-    await openLoginPopup('https://sso.yukthi.net', 'my-app');
+    await openLoginPopup('https://sso.example.com', 'my-app');
   } catch (err) {
     if (err instanceof PopupBlockedError) {
       // Fall back to a full-page redirect instead of a popup. The SSO
       // service redirects back to `returnTo` (default: current URL) once
       // login completes — detect that on your side (e.g. a query param you
       // add to returnTo) and skip straight to the backend exchange below.
-      redirectToLogin('https://sso.yukthi.net', 'my-app');
+      redirectToLogin('https://sso.example.com', 'my-app');
       return; // page is navigating away
     }
     throw err;
@@ -44,7 +44,7 @@ async function loginWithSso() {
 
 async function logout() {
   await myApi.post('/auth/logout'); // your own backend session
-  await ssoLogout('https://sso.yukthi.net'); // invalidates the SSO session
+  await ssoLogout('https://sso.example.com'); // invalidates the SSO session
 }
 ```
 
@@ -58,7 +58,7 @@ import { SSOProvider, SignedIn, SignedOut, SignInButton, useSSOAuth } from '@rjy
 function App() {
   return (
     <SSOProvider
-      ssoUrl="https://sso.yukthi.net"
+      ssoUrl="https://sso.example.com"
       appId="my-app"
       onAuthenticated={() => {
         // Optional: exchange the SSO session for your own app's tokens
@@ -70,7 +70,7 @@ function App() {
       }}
     >
       <SignedOut>
-        <SignInButton>Sign in with Yukthi SSO</SignInButton>
+        <SignInButton>Sign in with SSO</SignInButton>
       </SignedOut>
       <SignedIn>
         <Dashboard />
@@ -111,9 +111,51 @@ const { status, error, signIn, signOut } = useSSOAuth();
 
 **Doesn't:** mint, store, or refresh your app's own tokens. Every app's backend contract for that is different, so it's handled through `onAuthenticated`/`onSignOut` callbacks (or left entirely to your own code, for the framework-free primitives) instead of being baked into the package.
 
+## Wire protocol
+
+This package is a client. Any SSO service can work with it as long as it implements this contract — nothing here is tied to a particular backend.
+
+**Popup / redirect login** — the package navigates a popup (or, on the blocked-popup fallback, the whole page) to:
+
+```
+GET {ssoUrl}/login?mode=popup&app={appId}&origin={encoded current origin}      # popup mode
+GET {ssoUrl}/login?app={appId}&redirect_uri={encoded return URL}               # redirect mode (no "mode" param)
+```
+
+- **Popup mode** (`mode=popup` present): after authentication, `window.opener.postMessage(...)` back to the popup's opener, targeting the exact `origin` query param value:
+  ```ts
+  { type: 'SSO_AUTH_SUCCESS' }
+  { type: 'SSO_AUTH_FAILED', message?: string }
+  ```
+- **Redirect mode** (`redirect_uri` present, no `mode`): after authentication, `window.location.href = redirect_uri`. No `postMessage` involved.
+
+**Silent auth** — loaded in a hidden iframe to check for an existing session without a popup:
+
+```
+GET {ssoUrl}/silent-auth?app={appId}&origin={encoded current origin}
+```
+
+Should silently check the session and `postMessage` back to the parent, targeting `origin`:
+
+```ts
+{ type: 'SSO_AUTH_SUCCESS', payload?: unknown }
+{ type: 'SSO_AUTH_FAILED', message?: string }
+{ type: 'SSO_SESSION_EXPIRED', message?: string }
+```
+
+**Logout:**
+
+```
+DELETE {ssoUrl}/auth/logout   (credentials: 'include')
+```
+
+Should invalidate the session and respond with a 2xx status.
+
+**Security requirement:** the package only ever accepts a `postMessage` whose `event.origin` exactly matches `ssoUrl`'s origin. Your SSO service must validate the `origin` query param it receives just as strictly before trusting it as a `postMessage` target — never post back to an unvalidated origin.
+
 ## API Reference
 
-Every exported member, in full. `ssoUrl` throughout is the base URL of the hosted SSO service (e.g. `https://sso.yukthi.net`), and `appId` is whatever identifier your app registers with it (e.g. `"chat"`).
+Every exported member, in full. `ssoUrl` throughout is the base URL of the hosted SSO service (e.g. `https://sso.example.com`), and `appId` is whatever identifier your app registers with it (e.g. `"chat"`).
 
 ### `<SSOProvider>`
 
@@ -121,7 +163,7 @@ The state-managing provider for the hooks/components tier. Wrap your app (or the
 
 ```tsx
 <SSOProvider
-  ssoUrl="https://sso.yukthi.net"
+  ssoUrl="https://sso.example.com"
   appId="my-app"
   silentAuthTimeoutMs={5000}
   skipInitialCheck={false}
@@ -164,7 +206,7 @@ Returns an `SSOAuthContextValue`:
 A `<button>` that calls `signIn()` on click. Renders inside an `<SSOProvider>`.
 
 ```tsx
-<SignInButton>Sign in with Yukthi SSO</SignInButton>
+<SignInButton>Sign in with SSO</SignInButton>
 <SignInButton className="my-button-class" onClick={trackEvent} />
 ```
 
@@ -212,7 +254,7 @@ Opens the SSO login popup and waits for the result.
 import { openLoginPopup, PopupBlockedError } from '@rjyspl/phoenix-sso-react';
 
 try {
-  await openLoginPopup('https://sso.yukthi.net', 'my-app', { width: 480, height: 620 });
+  await openLoginPopup('https://sso.example.com', 'my-app', { width: 480, height: 620 });
   // popup succeeded — SSO cookie is now set
 } catch (err) {
   if (err instanceof PopupBlockedError) { /* see redirectToLogin below */ }
@@ -249,7 +291,7 @@ Checks for an existing SSO session via a hidden iframe, without opening a popup.
 import { checkSilentAuth } from '@rjyspl/phoenix-sso-react';
 
 try {
-  const payload = await checkSilentAuth('https://sso.yukthi.net', 'my-app', 5000);
+  const payload = await checkSilentAuth('https://sso.example.com', 'my-app', 5000);
   // an SSO session already exists
 } catch {
   // no active session (or the check timed out)
@@ -270,7 +312,7 @@ Calls the SSO service's own logout endpoint to invalidate its session cookie.
 ```ts
 import { ssoLogout } from '@rjyspl/phoenix-sso-react';
 
-await ssoLogout('https://sso.yukthi.net');
+await ssoLogout('https://sso.example.com');
 ```
 
 - **Returns:** `Promise<void>`.
@@ -283,7 +325,7 @@ Navigates the whole page to the SSO login screen instead of opening a popup — 
 ```ts
 import { redirectToLogin } from '@rjyspl/phoenix-sso-react';
 
-redirectToLogin('https://sso.yukthi.net', 'my-app', {
+redirectToLogin('https://sso.example.com', 'my-app', {
   returnTo: `${window.location.origin}/login?sso_redirect=1`,
 });
 ```
@@ -297,8 +339,8 @@ redirectToLogin('https://sso.yukthi.net', 'my-app', {
 The pure URL-builder `redirectToLogin` uses internally, exposed in case you want to construct the URL yourself (e.g. for a plain `<a href>` instead of a JS-triggered navigation).
 
 ```ts
-buildLoginRedirectUrl('https://sso.yukthi.net', 'my-app', 'https://my-app.com/login')
-// => 'https://sso.yukthi.net/login?app=my-app&redirect_uri=https%3A%2F%2Fmy-app.com%2Flogin'
+buildLoginRedirectUrl('https://sso.example.com', 'my-app', 'https://my-app.com/login')
+// => 'https://sso.example.com/login?app=my-app&redirect_uri=https%3A%2F%2Fmy-app.com%2Flogin'
 ```
 
 - **Returns:** `string`.
