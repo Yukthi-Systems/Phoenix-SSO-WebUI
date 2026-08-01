@@ -16,22 +16,31 @@
  */
 
 import { isValidOrigin } from '../utils/security';
+import type { SilentAuthResult, SsoMessage } from '../types';
+
+interface IframeManager {
+  iframeElement: HTMLIFrameElement | null;
+  messageListener: ((event: MessageEvent) => void) | null;
+  timeoutTimer: ReturnType<typeof setTimeout> | null;
+  checkSilentAuth(ssoUrl: string, appName: string, timeoutMs?: number): Promise<SilentAuthResult>;
+  cleanup(): void;
+}
 
 /**
  * Reusable Iframe Authentication Manager for client apps to run silent session validations.
  */
-export const iframeManager = {
+export const iframeManager: IframeManager = {
   iframeElement: null,
   messageListener: null,
   timeoutTimer: null,
 
   /**
    * Performs silent auth check using a hidden iframe.
-   * 
-   * @param {string} ssoUrl - The centralized SSO base URL (e.g. "https://sso.example.com")
-   * @param {string} appName - The client application name (e.g. "app1")
-   * @param {number} timeoutMs - Max timeout in milliseconds (default: 5000)
-   * @returns {Promise<object>} Resolves on session validity, rejects on invalid session or timeout
+   *
+   * @param ssoUrl - The centralized SSO base URL (e.g. "https://sso.example.com")
+   * @param appName - The client application name (e.g. "app1")
+   * @param timeoutMs - Max timeout in milliseconds (default: 5000)
+   * @returns Resolves on session validity, rejects on invalid session or timeout
    */
   checkSilentAuth(ssoUrl, appName, timeoutMs = 5000) {
     return new Promise((resolve, reject) => {
@@ -52,18 +61,18 @@ export const iframeManager = {
       this.iframeElement.id = 'sso-silent-auth-frame';
 
       // 4. Setup message listener
-      this.messageListener = (event) => {
+      this.messageListener = (event: MessageEvent) => {
         // Security checks
         if (!isValidOrigin(event.origin) && event.origin !== ssoUrl) {
           return;
         }
 
-        const data = event.data;
+        const data = event.data as SsoMessage | undefined;
         if (!data || typeof data !== 'object') return;
 
         // Process message results
         if (data.type === 'SSO_AUTH_SUCCESS') {
-          resolve({ status: 'authenticated', data: data.payload || null });
+          resolve({ status: 'authenticated', data: data.payload ?? null });
           this.cleanup();
         } else if (data.type === 'SSO_AUTH_FAILED' || data.type === 'SSO_SESSION_EXPIRED') {
           reject(new Error(data.message || 'No active session found.'));

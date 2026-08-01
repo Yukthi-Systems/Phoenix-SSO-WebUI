@@ -17,6 +17,7 @@
 
 import axios from 'axios';
 import { API_URL } from '../const/contants';
+import type { ApiError } from '../types';
 
 // Create configured Axios client
 const apiClient = axios.create({
@@ -35,10 +36,11 @@ apiClient.interceptors.response.use(
     // Check if network error or server down
     if (!error.response) {
       console.error('Network/Server error encountered:', error);
-      return Promise.reject({
+      const apiError: ApiError = {
         message: 'Unable to connect to security server. Please verify your connection.',
         originalError: error,
-      });
+      };
+      return Promise.reject(apiError);
     }
 
     const { status, data } = error.response;
@@ -70,20 +72,22 @@ apiClient.interceptors.response.use(
       }
 
       // Return a structured error response that can be handled locally
-      return Promise.reject({
+      const apiError: ApiError = {
         status,
         message: (typeof data === 'string' ? data : (data?.error || data?.message || data?.detail)) || (isOtpEndpoint ? 'Invalid or expired OTP code.' : 'Your security session has expired.'),
         code: isOtpEndpoint ? 'OTP_ERROR' : 'SESSION_EXPIRED',
         originalError: error,
-      });
+      };
+      return Promise.reject(apiError);
     }
 
     // Pass on other errors
-    return Promise.reject({
+    const apiError: ApiError = {
       status,
       message: (typeof data === 'string' ? data : (data?.error || data?.message || data?.detail)) || 'An unexpected authentication error occurred.',
       originalError: error,
-    });
+    };
+    return Promise.reject(apiError);
   }
 );
 

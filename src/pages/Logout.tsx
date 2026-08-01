@@ -15,16 +15,15 @@
  * <https://www.gnu.org/licenses/>.
  */
 
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
 import authService from '../services/authService';
 import AuthLayout from '../layouts/AuthLayout';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 import { isValidOrigin, sanitizeRedirectUrl } from '../utils/security';
+import type { ApiError } from '../types';
 
 export default function Logout() {
-  const { logout } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -38,7 +37,7 @@ export default function Logout() {
         // 1. Call backend logout API
         await authService.logout();
       } catch (err) {
-        console.warn('Logout request completed with warning:', err.message);
+        console.warn('Logout request completed with warning:', (err as ApiError).message);
       } finally {
         // 2. Broadcast logout message if opener app exists
         const origin = targetOrigin || (window.opener ? '*' : null);

@@ -15,7 +15,11 @@
  * <https://www.gnu.org/licenses/>.
  */
 
-import { atomWithStorage } from 'jotai/utils';
-
-export const userAtom = atomWithStorage('sso_user_profile', null);
-export const sessionExpirationAtom = atomWithStorage('sso_session_expiration', null);
+// Shape of the rejection value produced by apiClient's response interceptor
+// (src/api/client.ts) — not a raw AxiosError.
+export interface ApiError {
+  status?: number;
+  message: string;
+  code?: 'OTP_ERROR' | 'SESSION_EXPIRED';
+  originalError?: unknown;
+}

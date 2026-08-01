@@ -15,7 +15,6 @@
  * <https://www.gnu.org/licenses/>.
  */
 
-import React from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { Provider as JotaiProvider } from 'jotai';
 import { AuthProvider } from './context/AuthContext';
@@ -29,7 +28,7 @@ function App() {
       <BrowserRouter>
         <AuthProvider>
           <AppRoutes />
-          <Toaster 
+          <Toaster
             position="top-right"
             toastOptions={{
               style: {

@@ -36,7 +36,7 @@ export default function AppRoutes() {
       {/* Session Entry Checking Route */}
       <Route path="/" element={<Navigate to="/session-check" replace />} />
       <Route path="/session-check" element={<SessionCheck />} />
-      
+
       {/* Auth Entry Routes */}
       <Route path="/login" element={<Login />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -45,12 +45,12 @@ export default function AppRoutes() {
       <Route path="/silent-auth" element={<SilentAuth />} />
       <Route path="/logout" element={<Logout />} />
       <Route path="/success" element={<Success />} />
-      
+
       {/* Feedback Routes */}
       <Route path="/error" element={<ErrorPage />} />
       <Route path="/session-expired" element={<SessionExpired />} />
       <Route path="/unauthorized" element={<Unauthorized />} />
-      
+
       {/* Fallback Catch-all */}
       <Route path="*" element={<Navigate to="/session-check" replace />} />
     </Routes>

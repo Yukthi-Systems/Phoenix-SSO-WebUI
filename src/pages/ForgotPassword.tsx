@@ -15,16 +15,17 @@
  * <https://www.gnu.org/licenses/>.
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, type FormEvent, type ChangeEvent, type KeyboardEvent, type ClipboardEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import Reaptcha from 'react-google-recaptcha';
 import AuthLayout from '../layouts/AuthLayout';
 import authService from '../services/authService';
 import toast from 'react-hot-toast';
+import type { ApiError } from '../types';
 
 export default function ForgotPassword() {
   const navigate = useNavigate();
-  
+
   // Set page title for SEO
   useEffect(() => {
     document.title = 'Reset Password | SSO Security';
@@ -35,12 +36,12 @@ export default function ForgotPassword() {
   const [loading, setLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
   const [error, setError] = useState('');
-  
+
   // Method selection & reCAPTCHA
   const [verifyMethod, setVerifyMethod] = useState('email');
-  const [recaptchaToken, setRecaptchaToken] = useState(null);
-  const recaptchaRef = useRef();
-  
+  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
+  const recaptchaRef = useRef<Reaptcha>(null);
+
   // Form values
   const [email, setEmail] = useState('');
   const [otpVal, setOtpVal] = useState(new Array(6).fill(''));
@@ -49,7 +50,7 @@ export default function ForgotPassword() {
   const [showPassword, setShowPassword] = useState(false);
 
   // Email submission handler
-  const handleEmailSubmit = async (e) => {
+  const handleEmailSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!email) {
       setError('Username/Email is required.');
@@ -70,7 +71,7 @@ export default function ForgotPassword() {
       setRecaptchaToken(null);
       setStep(2);
     } catch (err) {
-      setError(err.message || 'Failed to send verification code. Please try again.');
+      setError((err as ApiError).message || 'Failed to send verification code. Please try again.');
       recaptchaRef.current?.reset();
       setRecaptchaToken(null);
     } finally {
@@ -78,7 +79,7 @@ export default function ForgotPassword() {
     }
   };
 
-  const onRecaptchaVerify = (token) => {
+  const onRecaptchaVerify = (token: string | null) => {
     setRecaptchaToken(token);
     if (error === 'Please complete the security verification.') setError('');
   };
@@ -94,7 +95,7 @@ export default function ForgotPassword() {
   };
 
   // Complete Reset handler (OTP + New Password)
-  const handleCompleteSubmit = async (e) => {
+  const handleCompleteSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const code = otpVal.join('');
     if (code.length < 6) {
@@ -127,9 +128,9 @@ export default function ForgotPassword() {
         navigate('/login');
       }, 3000);
     } catch (err) {
-      const msg = err.message || 'Failed to reset password. Please try again.';
+      const msg = (err as ApiError).message || 'Failed to reset password. Please try again.';
       setError(msg);
-      
+
       // Auto redirect to Step 1 on OTP-related errors to mimic Admin Panel
       if (
         msg.toLowerCase().includes("token") ||
@@ -161,7 +162,7 @@ export default function ForgotPassword() {
       toast.success('A new verification code has been sent.');
       setOtpVal(new Array(6).fill(''));
     } catch (err) {
-      setError(err.message || 'Failed to resend code. Please try again.');
+      setError((err as ApiError).message || 'Failed to resend code. Please try again.');
     } finally {
       setResendLoading(false);
     }
@@ -176,7 +177,7 @@ export default function ForgotPassword() {
     if (/[A-Z]/.test(newPassword)) score += 1;
     if (/[0-9]/.test(newPassword)) score += 1;
     if (/[^A-Za-z0-9]/.test(newPassword)) score += 1;
-    
+
     if (score <= 2) return { score, label: 'Weak', color: 'bg-red-500' };
     if (score <= 4) return { score, label: 'Medium', color: 'bg-amber-500' };
     return { score, label: 'Strong', color: 'bg-emerald-500' };
@@ -185,9 +186,9 @@ export default function ForgotPassword() {
   const strength = getPasswordStrength();
 
   // Helper to handle OTP entries
-  const handleOtpChange = (e, index) => {
+  const handleOtpChange = (e: ChangeEvent<HTMLInputElement>, index: number) => {
     const value = e.target.value;
-    
+
     const newOtp = [...otpVal];
     newOtp[index] = value.substring(value.length - 1).toUpperCase();
     setOtpVal(newOtp);
@@ -198,7 +199,7 @@ export default function ForgotPassword() {
     }
   };
 
-  const handleOtpKeyDown = (e, index) => {
+  const handleOtpKeyDown = (e: KeyboardEvent<HTMLInputElement>, index: number) => {
     if (e.key === 'Backspace') {
       const newOtp = [...otpVal];
       if (newOtp[index] !== '') {
@@ -213,7 +214,7 @@ export default function ForgotPassword() {
     }
   };
 
-  const handleOtpPaste = (e) => {
+  const handleOtpPaste = (e: ClipboardEvent<HTMLInputElement>) => {
     e.preventDefault();
     const pastedData = e.clipboardData.getData('text').toUpperCase().replace(/\s/g, '');
     if (!pastedData) return;
@@ -309,11 +310,10 @@ export default function ForgotPassword() {
               <Reaptcha
                 ref={recaptchaRef}
                 sitekey="6LdnqnksAAAAADb9pV-s81jk_nEoHP34trkZ457b"
-                action="PASSWORD_RESET"
                 size="normal"
                 onChange={onRecaptchaVerify}
                 onExpired={onRecaptchaExpire}
-                onError={onRecaptchaError}
+                onErrored={onRecaptchaError}
                 theme="dark"
               />
             </div>
@@ -468,7 +468,7 @@ export default function ForgotPassword() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            
+
             <div>
               <h1 className="text-xl font-bold tracking-tight text-text-main mb-2">
                 Password Reset Complete

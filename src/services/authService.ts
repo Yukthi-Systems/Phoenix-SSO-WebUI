@@ -17,8 +17,11 @@
 
 import apiClient from '../api/client';
 import axios from 'axios';
+import type { DeviceDetails } from '../types';
 
-function getDeviceDetails(ipAddress = '') {
+// A handful of client-hint / device-fingerprint APIs aren't in the standard
+// DOM lib types yet — narrow, local casts instead of a blanket Navigator override.
+function getDeviceDetails(ipAddress = ''): DeviceDetails {
   const ua = navigator.userAgent;
   let browserName = 'Unknown Browser';
   let osName = 'Unknown OS';
@@ -56,7 +59,7 @@ function getDeviceDetails(ipAddress = '') {
   let timeZone = 'Unknown';
   try {
     timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  } catch (e) {
+  } catch {
     // ignore
   }
   const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
@@ -66,10 +69,11 @@ function getDeviceDetails(ipAddress = '') {
   let secChUaMobile = '';
   let secChUaPlatform = '';
 
-  if (navigator.userAgentData) {
-    secChUa = navigator.userAgentData.brands.map(b => `"${b.brand}";v="${b.version}"`).join(', ');
-    secChUaMobile = navigator.userAgentData.mobile ? '?1' : '?0';
-    secChUaPlatform = `"${navigator.userAgentData.platform}"`;
+  const userAgentData = navigator.userAgentData;
+  if (userAgentData) {
+    secChUa = userAgentData.brands.map((b) => `"${b.brand}";v="${b.version}"`).join(', ');
+    secChUaMobile = userAgentData.mobile ? '?1' : '?0';
+    secChUaPlatform = `"${userAgentData.platform}"`;
   }
 
   const hardwareConcurrency = navigator.hardwareConcurrency || 'Unknown';
@@ -93,7 +97,7 @@ function getDeviceDetails(ipAddress = '') {
   const sessionStorageEnabled = typeof window.sessionStorage !== 'undefined';
   const webdriver = navigator.webdriver || false;
 
-  const details = {
+  const details: DeviceDetails = {
     os: osName,
     browser: browserName,
     screenResolution,
@@ -144,11 +148,8 @@ function getDeviceDetails(ipAddress = '') {
 const authService = {
   /**
    * Triggers initial credentials check
-   * @param {string} email 
-   * @param {string} password 
-   * @param {boolean} rememberMe 
    */
-  async login(email, password, rememberMe) {
+  async login(email: string, password: string, rememberMe: boolean) {
     let ipAddress = '';
     try {
       const controller = new AbortController();
@@ -158,7 +159,7 @@ const authService = {
       const ipData = await ipRes.json();
       ipAddress = ipData.ip || '';
     } catch (err) {
-      console.warn('IP fetch failed, proceeding without IP', err.message);
+      console.warn('IP fetch failed, proceeding without IP', (err as Error).message);
     }
 
     const deviceDetails = getDeviceDetails(ipAddress);
@@ -186,9 +187,9 @@ const authService = {
 
   /**
    * Used for Silent Auth iframe checks
-   * @param {string} app - The application identifier requesting session (e.g. "app1")
+   * @param app - The application identifier requesting session (e.g. "app1")
    */
-  async generateSession(app) {
+  async generateSession(_app: string | null) {
     const response = await apiClient.get('/auth/session');
     return response.data;
     // Expected response: { success: true }
@@ -207,19 +208,19 @@ const authService = {
 
   /**
    * Validates the 6-digit OTP code against the backend
-   * @param {string} otpType - 'app' | 'sms' | 'email'
-   * @param {string} otp - 6-digit code
+   * @param otpType - 'app' | 'sms' | 'email'
+   * @param otp - 6-digit code
    */
-  async validateOtp(otpType, otp) {
+  async validateOtp(otpType: string, otp: string) {
     const response = await apiClient.post(`/auth/otp/validate/${otpType}/${otp}`);
     return response.data;
   },
 
   /**
    * Triggers resending the OTP code
-   * @param {string} otpType - 'app' | 'sms' | 'email'
+   * @param otpType - 'app' | 'sms' | 'email'
    */
-  async resendOtp(otpType) {
+  async resendOtp(otpType: string) {
     const response = await apiClient.post(`/auth/otp/resend/${otpType}`);
     return response.data;
   },
@@ -234,11 +235,11 @@ const authService = {
 
   /**
    * Initiates a password reset flow by sending an OTP to the given email.
-   * @param {string} email - The user's email address
-   * @param {string} verify_via - Method to verify, default to 'email'
-   * @param {string} recaptcha_token - Optional recaptcha token
+   * @param email - The user's email address
+   * @param verify_via - Method to verify, default to 'email'
+   * @param recaptcha_token - Optional recaptcha token
    */
-  async requestPasswordReset(email, verify_via = 'email', recaptcha_token = '') {
+  async requestPasswordReset(email: string, verify_via = 'email', recaptcha_token = '') {
     const response = await axios.post(`https://v3-admin-api.test.yukthi.net/identities/reset/password/${email}/init?verify_via=${verify_via}&recaptcha_token=${recaptcha_token}`);
     return response.data;
     // Expected response: { message: '...', verify_via: 'email' }
@@ -246,12 +247,12 @@ const authService = {
 
   /**
    * Finalises the password reset by submitting the OTP and new password.
-   * @param {string} email - The user's email address
-   * @param {string} otp - 6-digit OTP code entered by the user
-   * @param {string} newPassword - The user's chosen new password
-   * @param {string} verify_via - Method to verify, default to 'email'
+   * @param email - The user's email address
+   * @param otp - 6-digit OTP code entered by the user
+   * @param newPassword - The user's chosen new password
+   * @param verify_via - Method to verify, default to 'email'
    */
-  async completePasswordReset(email, otp, newPassword, verify_via = 'email') {
+  async completePasswordReset(email: string, otp: string, newPassword: string, verify_via = 'email') {
     const response = await axios.post(`https://v3-admin-api.test.yukthi.net/identities/reset/password/${email}/complete`, {
       otp: otp,
       new_password_base64: btoa(newPassword),

@@ -15,7 +15,6 @@
  * <https://www.gnu.org/licenses/>.
  */
 
-import React from 'react';
 import AuthLayout from '../layouts/AuthLayout';
 import { getBrandName } from '../utils/security';
 
@@ -24,7 +23,7 @@ export default function Unauthorized() {
     <AuthLayout>
       <div className="text-center">
         {/* Shield/Alert icon */}
-        <div 
+        <div
           className="w-14 h-14 rounded-full bg-error/10 text-error flex items-center justify-center mx-auto mb-5"
         >
           <svg width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
@@ -39,7 +38,7 @@ export default function Unauthorized() {
           The application requesting authentication is not authorized to interact with this SSO provider, or the redirect coordinates are invalid.
         </p>
 
-        <div 
+        <div
           className="bg-black/15 border border-card-border rounded-lg p-3 text-xs text-text-muted text-left mb-5"
         >
           <strong>Security Notice:</strong> To register a new application domain or update your whitelist configuration, please contact the network administrator for <em>{getBrandName()}</em>.

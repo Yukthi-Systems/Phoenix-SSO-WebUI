@@ -15,13 +15,19 @@
  * <https://www.gnu.org/licenses/>.
  */
 
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import './index.css'
-import App from './App.jsx'
+export interface User {
+  email: string;
+  first_name?: string;
+  last_name?: string;
+  organization_id?: string;
+  organization_name?: string;
+  primary_phone?: string;
+  secondary_email?: string;
+  is_app_2fa_enabled?: boolean;
+  is_sms_2fa_enabled?: boolean;
+  is_email_2fa_enabled?: boolean;
+}
 
-createRoot(document.getElementById('root')).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-)
+// MFA transaction data carries the same profile fields as User, gathered
+// before a session is fully established.
+export type TempMfaData = User;

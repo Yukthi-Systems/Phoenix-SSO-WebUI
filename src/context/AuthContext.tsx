@@ -15,24 +15,25 @@
  * <https://www.gnu.org/licenses/>.
  */
 
-import React, { createContext, useState, useEffect, useCallback, useRef } from 'react';
+import { createContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import { useAtom } from 'jotai';
 import { userAtom, sessionExpirationAtom } from '../store/authStore';
 import authService from '../services/authService';
 import { getBrandName } from '../utils/security';
+import type { AuthContextValue, MfaType, TempMfaData, User, OtpType, ApiError } from '../types';
 
-export const AuthContext = createContext(null);
+export const AuthContext = createContext<AuthContextValue | null>(null);
 
-export function AuthProvider({ children }) {
+export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useAtom(userAtom);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [mfaPending, setMfaPending] = useState(false);
-  const [mfaType, setMfaType] = useState(null); // 'email_otp' | 'authenticator_otp'
-  const [tempToken, setTempToken] = useState(null); // MFA transaction context
-  const [tempMfaData, setTempMfaData] = useState(null);
+  const [mfaType, setMfaType] = useState<MfaType>(null); // 'email_otp' | 'authenticator_otp'
+  const [tempToken, setTempToken] = useState<string | null>(null); // MFA transaction context
+  const [tempMfaData, setTempMfaData] = useState<TempMfaData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [sessionExpiration, setSessionExpiration] = useAtom(sessionExpirationAtom);
+  const [error, setError] = useState<string | null>(null);
+  const [, setSessionExpiration] = useAtom(sessionExpirationAtom);
 
 
   // Checks for existing session cookie on mount
@@ -55,7 +56,7 @@ export function AuthProvider({ children }) {
         const storedSecEmail = localStorage.getItem('sso_user_secondary_email');
 
         // Map user profile from the top-level response if data.user is not available
-        const userProfile = data.user || {
+        const userProfile: User = data.user || {
           email: data.email || storedEmail || 'user@' + getBrandName(),
           first_name: data.first_name,
           last_name: data.last_name,
@@ -79,7 +80,7 @@ export function AuthProvider({ children }) {
       setIsAuthenticated(false);
       setUser(null);
       return false;
-    } catch (err) {
+    } catch {
       console.warn('Session check did not find active session credentials.');
       setIsAuthenticated(false);
       setUser(null);
@@ -87,18 +88,18 @@ export function AuthProvider({ children }) {
     } finally {
       setLoading(false);
     }
-  }, [setUser]);
+  }, [setUser, setSessionExpiration]);
 
   useEffect(() => {
     checkSession();
   }, [checkSession]);
 
   // Log in using credentials
-  const loginAction = async (email, password, rememberMe) => {
+  const loginAction = async (email: string, password: string, rememberMe?: boolean) => {
     try {
       setLoading(true);
       setError(null);
-      const data = await authService.login(email, password, rememberMe);
+      const data = await authService.login(email, password, !!rememberMe);
 
       // Check if 2FA verification is required
       if (data && data.message === 'OTP verification required') {
@@ -155,8 +156,11 @@ export function AuthProvider({ children }) {
         setIsAuthenticated(true);
       } else {
         // Since session check might not return full user info, we can augment it
+        // Spreading `prev ?? {}` matches the original's `...prev` (spreading null is a
+        // no-op in JS) while satisfying the type checker; cast since prev may lack
+        // `email` here exactly like the original untyped object could.
         setUser(prev => ({
-          ...prev,
+          ...(prev ?? {}),
           first_name: prev?.first_name || data.first_name,
           last_name: prev?.last_name || data.last_name,
           organization_id: prev?.organization_id || data.organization_id,
@@ -166,7 +170,7 @@ export function AuthProvider({ children }) {
           is_app_2fa_enabled: prev?.is_app_2fa_enabled || data.is_app_2fa_enabled,
           is_sms_2fa_enabled: prev?.is_sms_2fa_enabled || data.is_sms_2fa_enabled,
           is_email_2fa_enabled: prev?.is_email_2fa_enabled || data.is_email_2fa_enabled,
-        }));
+        } as User));
       }
 
       const message = typeof data === 'string'
@@ -174,19 +178,19 @@ export function AuthProvider({ children }) {
         : (data && typeof data.message === 'string' ? data.message : 'Login successful');
       return { success: true, message };
     } catch (err) {
-      setError(err.message || 'Login failed. Please check your credentials.');
+      setError((err as ApiError)?.message || 'Login failed. Please check your credentials.');
       setLoading(false);
       throw err;
     }
   };
 
   // Verifies the OTP (2FA/MFA)
-  const verifyOtpAction = useCallback(async (otpType, otpCode) => {
+  const verifyOtpAction = useCallback(async (otpType: OtpType, otpCode: string) => {
     try {
       setLoading(true);
       setError(null);
       const response = await authService.validateOtp(otpType, otpCode);
-      
+
       const ok = await checkSession();
       if (!ok) {
         console.warn('Session check failed after OTP validation. Falling back to local state.');
@@ -210,7 +214,7 @@ export function AuthProvider({ children }) {
       setTempMfaData(null);
       return { success: true, message: response.message || 'OTP validated successfully' };
     } catch (err) {
-      setError(err.message || 'OTP Verification failed.');
+      setError((err as ApiError)?.message || 'OTP Verification failed.');
       throw err;
     } finally {
       setLoading(false);
@@ -218,14 +222,14 @@ export function AuthProvider({ children }) {
   }, [checkSession, setUser, tempMfaData]);
 
   // Resend OTP code
-  const resendOtpAction = useCallback(async (otpType) => {
+  const resendOtpAction = useCallback(async (otpType: OtpType) => {
     try {
       setLoading(true);
       setError(null);
       const response = await authService.resendOtp(otpType);
       return { success: true, message: response.message || 'OTP resent successfully' };
     } catch (err) {
-      setError(err.message || 'Failed to resend code.');
+      setError((err as ApiError)?.message || 'Failed to resend code.');
       throw err;
     } finally {
       setLoading(false);
@@ -309,7 +313,7 @@ export function AuthProvider({ children }) {
 
   const clearError = () => setError(null);
 
-  const value = {
+  const value: AuthContextValue = {
     user,
     isAuthenticated,
     mfaPending,

@@ -15,7 +15,6 @@
  * <https://www.gnu.org/licenses/>.
  */
 
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import AuthLayout from '../layouts/AuthLayout';
 import { getBrandName } from '../utils/security';
@@ -27,7 +26,7 @@ export default function ErrorPage() {
     <AuthLayout>
       <div className="text-center">
         {/* Error icon wrapper */}
-        <div 
+        <div
           className="w-14 h-14 rounded-full bg-error/10 text-error flex items-center justify-center mx-auto mb-5"
         >
           <svg width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
@@ -43,15 +42,15 @@ export default function ErrorPage() {
         </p>
 
         <div className="flex flex-col gap-2">
-          <button 
-            type="button" 
+          <button
+            type="button"
             className="w-full py-3 px-6 text-base font-semibold rounded-xl cursor-pointer transition-all flex justify-center items-center gap-2 relative overflow-hidden bg-primary text-white shadow-sm hover:bg-primary-hover hover:shadow-[0_0_20px_rgba(99,102,241,0.25)] focus:outline-none focus:ring-4 focus:ring-primary/20"
             onClick={() => navigate('/login')}
           >
             Return to Login
           </button>
-          
-          <a 
+
+          <a
             href={`https://support.${getBrandName()}`}
             className="w-full py-3 px-6 text-base font-semibold rounded-xl cursor-pointer transition-all flex justify-center items-center gap-2 relative overflow-hidden bg-white/5 text-text-main border border-card-border hover:bg-white/10 no-underline"
             target="_blank"

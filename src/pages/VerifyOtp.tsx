@@ -15,23 +15,25 @@
  * <https://www.gnu.org/licenses/>.
  */
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, type ChangeEvent, type KeyboardEvent, type ClipboardEvent, type FormEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useCountdown } from '../hooks/useCountdown';
 import AuthLayout from '../layouts/AuthLayout';
 import { isValidOrigin, sanitizeRedirectUrl } from '../utils/security';
+import type { ApiError, OtpType } from '../types';
 
 // Extracts the human-readable message from an API error response
-function extractErrorMessage(err, fallback = 'An unexpected error occurred.') {
+function extractErrorMessage(err: unknown, fallback = 'An unexpected error occurred.'): string {
   if (!err) return fallback;
+  const apiErr = err as ApiError & { response?: { data?: unknown } };
   // Axios interceptor shapes errors into { message, status, ... }
-  if (typeof err.message === 'string' && err.message) return err.message;
+  if (typeof apiErr.message === 'string' && apiErr.message) return apiErr.message;
   // Raw axios error with a response body
-  if (err.response?.data) {
-    const d = err.response.data;
+  if (apiErr.response?.data) {
+    const d = apiErr.response.data as Record<string, unknown> | string;
     if (typeof d === 'string') return d;
-    return d.message || d.error || d.detail || fallback;
+    return (d.message as string) || (d.error as string) || (d.detail as string) || fallback;
   }
   return fallback;
 }
@@ -45,11 +47,11 @@ export default function VerifyOtp() {
   const [otpVal, setOtpVal] = useState(new Array(6).fill(''));
   const [mfaError, setMfaError] = useState('');
   const [mfaInfo, setMfaInfo] = useState(''); // info message (e.g. sending code...)
-  
+
   // Timer countdown: 60 seconds resend cooldown
   const { secondsLeft, isRunning, reset: resetTimer } = useCountdown(60);
 
-  const inputRefs = useRef([]);
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   // Flow parameters
   const redirectUri = searchParams.get('redirect_uri');
@@ -57,7 +59,7 @@ export default function VerifyOtp() {
 
   // Determine correct MFA type (app, sms, email)
   const mfaTypeParam = searchParams.get('mfa_type');
-  let otpType = 'app';
+  let otpType: OtpType = 'app';
   if (mfaTypeParam === 'app' || mfaTypeParam === 'sms' || mfaTypeParam === 'email') {
     otpType = mfaTypeParam;
   } else if (tempMfaData) {
@@ -110,7 +112,7 @@ export default function VerifyOtp() {
 
     if (otpType === 'app' || otpType === 'sms' || otpType === 'email') {
       hasTriggered.current = true;
-      setMfaInfo('Sending verification code\u2026');
+      setMfaInfo('Sending verification code…');
       resendOtp(otpType)
         .then(() => setMfaInfo(''))
         .catch(err => {
@@ -118,6 +120,7 @@ export default function VerifyOtp() {
           setMfaError(extractErrorMessage(err, 'Failed to send verification code.'));
         });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Manage timer and focus when otpType changes (e.g. user navigates back to pick different method)
@@ -135,9 +138,9 @@ export default function VerifyOtp() {
     }
   }, [isAuthenticated, handleSuccessNavigation]);
 
-  const handleChange = (e, index) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement>, index: number) => {
     const value = e.target.value;
-    if (isNaN(value)) return; // Allow numeric values only
+    if (isNaN(Number(value))) return; // Allow numeric values only
 
     const newOtp = [...otpVal];
     // Keep only the last character entered
@@ -146,14 +149,14 @@ export default function VerifyOtp() {
 
     // Auto-focus next input box if filled
     if (newOtp[index] !== '' && index < 5 && inputRefs.current[index + 1]) {
-      inputRefs.current[index + 1].focus();
+      inputRefs.current[index + 1]?.focus();
     }
   };
 
-  const handleKeyDown = (e, index) => {
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>, index: number) => {
     if (e.key === 'Backspace') {
       const newOtp = [...otpVal];
-      
+
       // If current field has content, clear it. Otherwise, clear previous and focus previous
       if (newOtp[index] !== '') {
         newOtp[index] = '';
@@ -161,25 +164,23 @@ export default function VerifyOtp() {
       } else if (index > 0 && inputRefs.current[index - 1]) {
         newOtp[index - 1] = '';
         setOtpVal(newOtp);
-        inputRefs.current[index - 1].focus();
+        inputRefs.current[index - 1]?.focus();
       }
     }
   };
 
-  const handlePaste = (e) => {
+  const handlePaste = (e: ClipboardEvent<HTMLInputElement>) => {
     e.preventDefault();
     const pastedData = e.clipboardData.getData('text').trim();
-    
+
     // Check if pasted value is a 6-digit number
     if (/^\d{6}$/.test(pastedData)) {
       const pasteArray = pastedData.split('');
       setOtpVal(pasteArray);
       setMfaError('');
-      
+
       // Move focus to the last box
-      if (inputRefs.current[5]) {
-        inputRefs.current[5].focus();
-      }
+      inputRefs.current[5]?.focus();
     } else {
       setMfaError('Please paste a valid 6-digit numeric code.');
     }
@@ -187,10 +188,10 @@ export default function VerifyOtp() {
 
   const handleResend = async () => {
     if (isRunning) return;
-    
+
     try {
       setMfaError('');
-      setMfaInfo('Sending a new code\u2026');
+      setMfaInfo('Sending a new code…');
       await resendOtp(otpType);
       setMfaInfo('');
       resetTimer(60); // Reset timer to 60s
@@ -200,10 +201,10 @@ export default function VerifyOtp() {
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const fullCode = otpVal.join('');
-    
+
     if (fullCode.length < 6) {
       setMfaError('Please complete all 6 digits of the code.');
       return;
@@ -271,7 +272,7 @@ export default function VerifyOtp() {
           {otpVal.map((digit, index) => (
             <input
               key={index}
-              ref={(el) => (inputRefs.current[index] = el)}
+              ref={(el) => { inputRefs.current[index] = el; }}
               type="text"
               inputMode="numeric"
               pattern="[0-9]*"
@@ -288,9 +289,9 @@ export default function VerifyOtp() {
         </div>
 
         {/* Action Button */}
-        <button 
-          type="submit" 
-          className="w-full py-3 px-6 text-base font-semibold rounded-xl cursor-pointer transition-all flex justify-center items-center gap-2 relative overflow-hidden bg-primary text-white shadow-sm hover:bg-primary-hover hover:shadow-[0_0_20px_rgba(99,102,241,0.25)] focus:outline-none focus:ring-4 focus:ring-primary/20 disabled:opacity-60 disabled:cursor-not-allowed mb-5" 
+        <button
+          type="submit"
+          className="w-full py-3 px-6 text-base font-semibold rounded-xl cursor-pointer transition-all flex justify-center items-center gap-2 relative overflow-hidden bg-primary text-white shadow-sm hover:bg-primary-hover hover:shadow-[0_0_20px_rgba(99,102,241,0.25)] focus:outline-none focus:ring-4 focus:ring-primary/20 disabled:opacity-60 disabled:cursor-not-allowed mb-5"
           disabled={loading}
         >
           {loading ? (

@@ -20,14 +20,13 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 /**
  * Custom hook to manage a countdown timer.
  * Useful for resending OTP codes and display timeouts.
- * 
- * @param {number} initialSeconds - Starting time in seconds
- * @returns {object} { secondsLeft, isRunning, reset, start }
+ *
+ * @param initialSeconds - Starting time in seconds
  */
 export function useCountdown(initialSeconds = 60) {
   const [secondsLeft, setSecondsLeft] = useState(initialSeconds);
   const [isRunning, setIsRunning] = useState(false);
-  const timerRef = useRef(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const clearTimer = useCallback(() => {
     if (timerRef.current) {
@@ -36,7 +35,7 @@ export function useCountdown(initialSeconds = 60) {
     }
   }, []);
 
-  const reset = useCallback((newSeconds = initialSeconds) => {
+  const reset = useCallback((newSeconds: number = initialSeconds) => {
     clearTimer();
     setSecondsLeft(newSeconds);
     setIsRunning(true);

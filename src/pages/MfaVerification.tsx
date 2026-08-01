@@ -15,10 +15,19 @@
  * <https://www.gnu.org/licenses/>.
  */
 
-import { useEffect } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import AuthLayout from '../layouts/AuthLayout';
+import type { OtpType } from '../types';
+
+interface MfaOption {
+  type: OtpType;
+  title: string;
+  description: string;
+  icon: ReactNode;
+  bg: string;
+}
 
 export default function MfaVerification() {
   const { tempMfaData, loading } = useAuth();
@@ -31,7 +40,7 @@ export default function MfaVerification() {
     }
   }, [tempMfaData, loading, navigate]);
 
-  const handleSelectMethod = (type) => {
+  const handleSelectMethod = (type: OtpType) => {
     // Navigate to verify page preserving query params
     const queryParams = new URLSearchParams(searchParams);
     queryParams.set('mfa_type', type);
@@ -43,7 +52,7 @@ export default function MfaVerification() {
     navigate(`/login?${queryParams.toString()}`);
   };
 
-  const options = [];
+  const options: MfaOption[] = [];
   if (tempMfaData?.is_app_2fa_enabled) {
     options.push({
       type: 'app',
