@@ -107,6 +107,8 @@ export default function VerifyOtp() {
   // This runs ONCE. Never re-runs, so it never clears errors set by submit/resend.
   useEffect(() => {
     clearError();
+    // Resetting local UI state on mount, not deriving it from props/state.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMfaError('');
     setMfaInfo('');
 
@@ -121,7 +123,7 @@ export default function VerifyOtp() {
         });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   // Manage timer and focus when otpType changes (e.g. user navigates back to pick different method)
   useEffect(() => {

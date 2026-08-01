@@ -15,14 +15,13 @@
  * <https://www.gnu.org/licenses/>.
  */
 
-import { createContext, useState, useEffect, useCallback, type ReactNode } from 'react';
+import { useState, useEffect, useCallback, type ReactNode } from 'react';
 import { useAtom } from 'jotai';
+import { AuthContext } from './AuthContextInstance';
 import { userAtom, sessionExpirationAtom } from '../store/authStore';
 import authService from '../services/authService';
 import { getBrandName } from '../utils/security';
 import type { AuthContextValue, MfaType, TempMfaData, User, OtpType, ApiError } from '../types';
-
-export const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useAtom(userAtom);
@@ -91,6 +90,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [setUser, setSessionExpiration]);
 
   useEffect(() => {
+    // Syncing with an external system (the SSO session cookie) on mount, not
+    // deriving state from props/state — not the anti-pattern this rule targets.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     checkSession();
   }, [checkSession]);
 

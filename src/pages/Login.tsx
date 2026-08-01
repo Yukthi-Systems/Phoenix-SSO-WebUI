@@ -39,30 +39,6 @@ export default function Login() {
   const redirectUri = searchParams.get('redirect_uri');
   const targetOrigin = searchParams.get('origin');
 
-  useEffect(() => {
-    // 1. Immediately check for SSO-Session-ID browser cookie
-    const hasSsoSession = document.cookie.split(';').some(item => item.trim().startsWith('SSO-Session-ID='));
-    if (hasSsoSession) {
-      navigate('/success', { replace: true });
-      return;
-    }
-
-    // Clear any previous errors on mount
-    clearError();
-    setValidationError('');
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [navigate]);
-
-
-
-  // Handle automatic redirect if already logged in on page load
-  useEffect(() => {
-    if (isAuthenticated && !loading) {
-      handleSuccessNavigation();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated, loading]);
-
   const handleSuccessNavigation = () => {
     if (isPopup) {
       // Validate target origin before posting secret status
@@ -83,6 +59,30 @@ export default function Login() {
       navigate('/success', { replace: true });
     }
   };
+
+  useEffect(() => {
+    // 1. Immediately check for SSO-Session-ID browser cookie
+    const hasSsoSession = document.cookie.split(';').some(item => item.trim().startsWith('SSO-Session-ID='));
+    if (hasSsoSession) {
+      navigate('/success', { replace: true });
+      return;
+    }
+
+    // Clear any previous errors on mount
+    clearError();
+    // Resetting local UI state on mount, not deriving it from props/state.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setValidationError('');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [navigate]);
+
+  // Handle automatic redirect if already logged in on page load
+  useEffect(() => {
+    if (isAuthenticated && !loading) {
+      handleSuccessNavigation();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, loading]);
 
   const validateForm = () => {
     if (!email) {

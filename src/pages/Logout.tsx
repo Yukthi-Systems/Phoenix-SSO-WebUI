@@ -38,24 +38,24 @@ export default function Logout() {
         await authService.logout();
       } catch (err) {
         console.warn('Logout request completed with warning:', (err as ApiError).message);
-      } finally {
-        // 2. Broadcast logout message if opener app exists
-        const origin = targetOrigin || (window.opener ? '*' : null);
-        if (isPopup && origin && (origin === '*' || isValidOrigin(origin))) {
-          window.opener.postMessage({ type: 'SSO_LOGOUT' }, origin);
-          window.close();
-          return;
-        }
+      }
 
-        // 3. Clear local states and redirect
-        if (redirectUri) {
-          const sanitized = sanitizeRedirectUrl(redirectUri);
-          // Redirect to client app
-          window.location.href = sanitized;
-        } else {
-          // Redirect to SSO login
-          navigate('/login', { replace: true });
-        }
+      // 2. Broadcast logout message if opener app exists
+      const origin = targetOrigin || (window.opener ? '*' : null);
+      if (isPopup && origin && (origin === '*' || isValidOrigin(origin))) {
+        window.opener.postMessage({ type: 'SSO_LOGOUT' }, origin);
+        window.close();
+        return;
+      }
+
+      // 3. Clear local states and redirect
+      if (redirectUri) {
+        const sanitized = sanitizeRedirectUrl(redirectUri);
+        // Redirect to client app
+        window.location.href = sanitized;
+      } else {
+        // Redirect to SSO login
+        navigate('/login', { replace: true });
       }
     };
 
