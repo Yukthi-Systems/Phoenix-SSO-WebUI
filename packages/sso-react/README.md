@@ -364,4 +364,4 @@ buildLoginRedirectUrl('https://sso.example.com', 'my-app', 'https://my-app.com/l
 
 ## License
 
-MIT
+GPL-3.0-only
