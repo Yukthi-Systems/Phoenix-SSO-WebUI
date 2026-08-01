@@ -56,7 +56,7 @@ when an individual is officially representing the project in public spaces.
 ## Enforcement
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be
-reported by opening a [confidential security advisory](https://github.com/Yukthi-Systems/V3-SSO-WebUI/security/advisories/new)
+reported by opening a [confidential security advisory](https://github.com/Yukthi-Systems/Phoenix-SSO-WebUI/security/advisories/new)
 on this repo, or by contacting a maintainer directly if you'd rather not
 report it in a space visible to other members.
 

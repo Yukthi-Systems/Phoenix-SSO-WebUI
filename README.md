@@ -1,4 +1,4 @@
-# V3 SSO WebUI
+# Phoenix SSO WebUI
 
 The hosted login UI for Yukthi's Single Sign-On service. Any platform that
 needs authentication redirects users here (or opens it in a popup) for
@@ -6,6 +6,13 @@ login, MFA/OTP verification, password reset, and session management —
 this repo is the frontend for that flow.
 
 Built with React 19, Vite, Tailwind CSS, and Jotai.
+
+## Related projects
+
+| Project | Description |
+| --- | --- |
+| [Phoenix-SSO-API](https://github.com/Yukthi-Systems/Phoenix-SSO-API) | Backend API this UI talks to |
+| [`packages/sso-react`](packages/sso-react) | `@rjyspl/phoenix-sso-react` — the React SDK other apps install to integrate with this SSO service, without hand-rolling the popup/`postMessage` handshake. Built and versioned from this same repo. |
 
 ## Pages
 

@@ -11,13 +11,14 @@ disclosure.
 issues are visible to everyone immediately, including anyone who might
 exploit the report before a fix ships.
 
-Instead, report privately using **[GitHub's private vulnerability reporting](https://github.com/Yukthi-Systems/V3-SSO-WebUI/security/advisories/new)**
+Instead, report privately using **[GitHub's private vulnerability reporting](https://github.com/Yukthi-Systems/Phoenix-SSO-WebUI/security/advisories/new)**
 (Security tab → "Report a vulnerability" on this repo). This opens a
 confidential thread with maintainers only.
 
-If the issue is in a backend/API service this UI talks to rather than in
-this repo's code, please still report it here first if you're unsure where
-it belongs — we'll route it to the right place.
+If the issue is in the backend this UI talks to rather than in this repo's
+code, report it against [Phoenix-SSO-API](https://github.com/Yukthi-Systems/Phoenix-SSO-API/security/advisories/new)
+instead. If you're unsure where it belongs, report it here first and we'll
+route it to the right place.
 
 Please include:
 

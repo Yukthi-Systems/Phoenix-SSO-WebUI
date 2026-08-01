@@ -1,0 +1,37 @@
+name: Publish @rjyspl/phoenix-sso-react
+
+on:
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+          scope: "@rjyspl"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck --workspace=packages/sso-react
+
+      - name: Lint
+        run: npm run lint --workspace=packages/sso-react
+
+      - name: Build package
+        run: npm run build --workspace=packages/sso-react
+
+      - name: Publish to npm
+        run: npm publish --workspace=packages/sso-react
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

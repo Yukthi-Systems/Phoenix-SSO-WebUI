@@ -1,7 +1,7 @@
 services:
-  phoenix-sso-ui:
-    image: rjyspl/phoenix-sso-ui:latest
-    container_name: phoenix-sso-ui
+  phoenix-sso-webui:
+    image: rjyspl/phoenix-sso-webui:latest
+    container_name: phoenix-sso-webui
     env_file:
       - .env
 

@@ -43,8 +43,8 @@ jobs:
           sbom: true
           provenance: true
           tags: |
-            rjyspl/phoenix-sso-ui:latest
-            rjyspl/phoenix-sso-ui:${{ steps.tag.outputs.TAG }}
+            rjyspl/phoenix-sso-webui:latest
+            rjyspl/phoenix-sso-webui:${{ steps.tag.outputs.TAG }}
 
   # Deployment disabled for now — no CD until we're ready to deploy again.
   # deploy:
@@ -67,11 +67,11 @@ jobs:
   #       run: |
   #         # Copy the docker-compose.yaml file to the server (Replace with existing file)
   #         # TODO: Uncomment the below line for production deployment based on the tag on push
-  #         # scp -o StrictHostKeyChecking=no docker-compose.yaml root@$SERVER_IP:/srv/v3-sso-ui/docker-compose.yaml
+  #         # scp -o StrictHostKeyChecking=no docker-compose.yaml root@$SERVER_IP:/srv/phoenix-sso-webui/docker-compose.yaml
   #
   #         # Connect and restart the service
   #         ssh -o StrictHostKeyChecking=no root@$SERVER_IP << 'EOF'
-  #           cd /srv/phoenix-sso-ui
+  #           cd /srv/phoenix-sso-webui
   #           docker compose pull
   #           docker compose up -d
   #           docker ps

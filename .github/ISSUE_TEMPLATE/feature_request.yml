@@ -1,12 +1,12 @@
 name: ✨ Feature Request
-description: Suggest a new feature or enhancement for V3 SSO WebUI
+description: Suggest a new feature or enhancement for Phoenix SSO WebUI
 title: "[Feature]: "
 labels: ["enhancement", "triage"]
 body:
   - type: markdown
     attributes:
       value: |
-        Thanks for suggesting an idea to improve V3 SSO WebUI!
+        Thanks for suggesting an idea to improve Phoenix SSO WebUI!
 
   - type: textarea
     id: problem

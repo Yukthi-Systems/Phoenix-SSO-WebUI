@@ -1,4 +1,4 @@
-# Contributing to V3 SSO WebUI
+# Contributing to Phoenix SSO WebUI
 
 Thanks for considering a contribution. This project follows the standard
 GitHub fork-and-PR flow — nobody, maintainers included, pushes directly to
@@ -12,7 +12,7 @@ GitHub fork-and-PR flow — nobody, maintainers included, pushes directly to
   [question](.github/ISSUE_TEMPLATE/question.yml) template and get alignment
   before writing code. It saves you from a PR that gets rejected on
   approach, not implementation.
-- For bugs, check [existing issues](https://github.com/Yukthi-Systems/V3-SSO-WebUI/issues)
+- For bugs, check [existing issues](https://github.com/Yukthi-Systems/Phoenix-SSO-WebUI/issues)
   first, then file one with the
   [bug report](.github/ISSUE_TEMPLATE/bug_report.yml) template if it's not
   already tracked.
@@ -22,13 +22,13 @@ GitHub fork-and-PR flow — nobody, maintainers included, pushes directly to
 ## Step-by-step
 
 1. **Fork the repo** — click "Fork" on
-   [github.com/Yukthi-Systems/V3-SSO-WebUI](https://github.com/Yukthi-Systems/V3-SSO-WebUI).
+   [github.com/Yukthi-Systems/Phoenix-SSO-WebUI](https://github.com/Yukthi-Systems/Phoenix-SSO-WebUI).
 
 2. **Clone your fork:**
 
    ```bash
-   git clone https://github.com/<your-username>/V3-SSO-WebUI
-   cd V3-SSO-WebUI
+   git clone https://github.com/<your-username>/Phoenix-SSO-WebUI
+   cd Phoenix-SSO-WebUI
    ```
 
 3. **Install dependencies** (Node.js 22+ recommended):

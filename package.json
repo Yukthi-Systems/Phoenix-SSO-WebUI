@@ -1,18 +1,21 @@
 {
-  "name": "sso-ui",
+  "name": "phoenix-sso-webui",
   "description": "Hosted login UI for Yukthi's Single Sign-On service",
   "license": "GPL-3.0-only",
   "author": "Yukthi Systems Private Limited",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Yukthi-Systems/V3-SSO-WebUI.git"
+    "url": "git+https://github.com/Yukthi-Systems/Phoenix-SSO-WebUI.git"
   },
   "bugs": {
-    "url": "https://github.com/Yukthi-Systems/V3-SSO-WebUI/issues"
+    "url": "https://github.com/Yukthi-Systems/Phoenix-SSO-WebUI/issues"
   },
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
