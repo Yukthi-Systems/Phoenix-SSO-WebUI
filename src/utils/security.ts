@@ -37,7 +37,7 @@ export function getBrandName(): string {
   if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_BRAND_NAME) {
     return import.meta.env.VITE_BRAND_NAME;
   }
-  return 'SSO Portal';
+  return 'Mail Service 25';
 }
 
 // Whitelist patterns for permitted client applications
@@ -108,17 +108,3 @@ export function sanitizeRedirectUrl(urlString: string | null | undefined): strin
   }
 }
 
-/**
- * Masks user email addresses to prevent PII exposure on MFA validation screens.
- * E.g., "john.doe@example.com" -> "jo******@example.com"
- */
-export function maskEmail(email: string | null | undefined): string {
-  if (!email || !email.includes('@')) return 'your email';
-
-  const [localPart, domain] = email.split('@');
-  if (localPart.length <= 2) {
-    return `${localPart[0]}***@${domain}`;
-  }
-
-  return `${localPart.substring(0, 2)}******@${domain}`;
-}

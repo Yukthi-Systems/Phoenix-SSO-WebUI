@@ -20,15 +20,38 @@ import { useNavigate, Link } from 'react-router-dom';
 import Reaptcha from 'react-google-recaptcha';
 import AuthLayout from '../layouts/AuthLayout';
 import authService from '../services/authService';
+import Button from '../components/ui/Button';
+import { buttonClasses } from '../components/ui/buttonStyles';
+import StatusBanner from '../components/ui/StatusBanner';
+import IconCircle from '../components/ui/IconCircle';
+import { getBrandName } from '../utils/security';
 import toast from 'react-hot-toast';
 import type { ApiError } from '../types';
 
+// Tracks the current data-theme attribute so the reCAPTCHA widget matches the active theme.
+function useDocumentTheme(): 'dark' | 'light' {
+  const [theme, setTheme] = useState<'dark' | 'light'>(
+    () => (document.documentElement.getAttribute('data-theme') as 'dark' | 'light') || 'dark'
+  );
+
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setTheme((document.documentElement.getAttribute('data-theme') as 'dark' | 'light') || 'dark');
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    return () => observer.disconnect();
+  }, []);
+
+  return theme;
+}
+
 export default function ForgotPassword() {
   const navigate = useNavigate();
+  const recaptchaTheme = useDocumentTheme();
 
   // Set page title for SEO
   useEffect(() => {
-    document.title = 'Reset Password | SSO Security';
+    document.title = `Reset Password | ${getBrandName()}`;
   }, []);
 
   // Wizard Step: 1 = Request, 2 = Verify OTP & New Password, 3 = Success
@@ -170,7 +193,7 @@ export default function ForgotPassword() {
 
   // Password strength checker helper
   const getPasswordStrength = () => {
-    if (!newPassword) return { score: 0, label: 'None', color: 'bg-white/10' };
+    if (!newPassword) return { score: 0, label: 'None', color: 'bg-text-muted/30' };
     let score = 0;
     if (newPassword.length >= 8) score += 1;
     if (newPassword.length >= 12) score += 1;
@@ -178,9 +201,9 @@ export default function ForgotPassword() {
     if (/[0-9]/.test(newPassword)) score += 1;
     if (/[^A-Za-z0-9]/.test(newPassword)) score += 1;
 
-    if (score <= 2) return { score, label: 'Weak', color: 'bg-red-500' };
-    if (score <= 4) return { score, label: 'Medium', color: 'bg-amber-500' };
-    return { score, label: 'Strong', color: 'bg-emerald-500' };
+    if (score <= 2) return { score, label: 'Weak', color: 'bg-error' };
+    if (score <= 4) return { score, label: 'Medium', color: 'bg-warning' };
+    return { score, label: 'Strong', color: 'bg-success' };
   };
 
   const strength = getPasswordStrength();
@@ -250,9 +273,9 @@ export default function ForgotPassword() {
             </p>
 
             {error && (
-              <div className="bg-red-500/10 border border-red-500/20 text-red-500 p-3 rounded-xl mb-5 text-sm flex items-center gap-2" role="alert" id="email-form-error">
-                <span>{error}</span>
-              </div>
+              <StatusBanner variant="error" className="mb-5" id="email-form-error">
+                {error}
+              </StatusBanner>
             )}
 
             <div className="mb-5 flex flex-col relative">
@@ -314,18 +337,19 @@ export default function ForgotPassword() {
                 onChange={onRecaptchaVerify}
                 onExpired={onRecaptchaExpire}
                 onErrored={onRecaptchaError}
-                theme="dark"
+                theme={recaptchaTheme}
               />
             </div>
 
-            <button
+            <Button
               id="reset-email-submit-btn"
               type="submit"
-              className="w-full py-3 px-6 text-base font-semibold rounded-xl cursor-pointer transition-all flex justify-center items-center gap-2 bg-primary text-white shadow-sm hover:bg-primary-hover focus:outline-none focus:ring-4 focus:ring-primary/20 disabled:opacity-60 disabled:cursor-not-allowed mb-4"
-              disabled={loading}
+              className="mb-4"
+              loading={loading}
+              loadingText="Sending code..."
             >
-              {loading ? 'Sending code...' : 'Send Verification Code'}
-            </button>
+              Send Verification Code
+            </Button>
           </form>
         )}
 
@@ -339,9 +363,9 @@ export default function ForgotPassword() {
             </p>
 
             {error && (
-              <div className="bg-red-500/10 border border-red-500/20 text-red-500 p-3 rounded-xl mb-5 text-sm flex items-center gap-2" role="alert" id="password-form-error">
-                <span>{error}</span>
-              </div>
+              <StatusBanner variant="error" className="mb-5" id="password-form-error">
+                {error}
+              </StatusBanner>
             )}
 
             <div className="mb-4">
@@ -424,7 +448,7 @@ export default function ForgotPassword() {
                   <span>Password Strength</span>
                   <span className="font-semibold">{strength.label}</span>
                 </div>
-                <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden flex gap-0.5">
+                <div className="h-1.5 w-full bg-black/10 rounded-full overflow-hidden flex gap-0.5">
                   <div className={`h-full transition-all duration-300 ${strength.color}`} style={{ width: `${(strength.score / 5) * 100}%` }}></div>
                 </div>
               </div>
@@ -450,24 +474,19 @@ export default function ForgotPassword() {
               />
             </div>
 
-            <button
-              id="reset-password-submit-btn"
-              type="submit"
-              className="w-full py-3 px-6 text-base font-semibold rounded-xl cursor-pointer transition-all flex justify-center items-center gap-2 bg-primary text-white shadow-sm hover:bg-primary-hover focus:outline-none focus:ring-4 focus:ring-primary/20 disabled:opacity-60 disabled:cursor-not-allowed mb-4"
-              disabled={loading}
-            >
+            <Button id="reset-password-submit-btn" type="submit" className="mb-4" loading={loading} loadingText="Resetting...">
               Reset Password
-            </button>
+            </Button>
           </form>
         )}
 
         {step === 3 && (
           <div className="text-center py-4 flex flex-col items-center gap-6" id="reset-success-screen">
-            <div className="relative flex items-center justify-center w-16 h-16 rounded-full bg-green-500/10 text-emerald-500 border border-green-500/20 shadow-[0_0_25px_rgba(34,195,93,0.15)] animate-[pulse_2s_infinite]">
+            <IconCircle variant="success" size="lg">
               <svg width="32" height="32" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
               </svg>
-            </div>
+            </IconCircle>
 
             <div>
               <h1 className="text-xl font-bold tracking-tight text-text-main mb-2">
@@ -478,11 +497,7 @@ export default function ForgotPassword() {
               </p>
             </div>
 
-            <Link
-              id="success-login-btn"
-              to="/login"
-              className="w-full py-3 px-6 text-base font-semibold rounded-xl text-center transition-all bg-primary text-white shadow-sm hover:bg-primary-hover focus:outline-none focus:ring-4 focus:ring-primary/20"
-            >
+            <Link id="success-login-btn" to="/login" className={buttonClasses('primary', 'text-center')}>
               Back to Sign In
             </Link>
           </div>

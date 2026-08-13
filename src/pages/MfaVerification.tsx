@@ -64,7 +64,7 @@ export default function MfaVerification() {
           <line x1="12" y1="18" x2="12.01" y2="18"></line>
         </svg>
       ),
-      bg: 'bg-indigo-500/10 text-primary'
+      bg: 'bg-primary/10 text-primary'
     });
   }
 
@@ -78,7 +78,7 @@ export default function MfaVerification() {
           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
         </svg>
       ),
-      bg: 'bg-green-500/10 text-success'
+      bg: 'bg-success/10 text-success'
     });
   }
 
@@ -93,7 +93,7 @@ export default function MfaVerification() {
           <polyline points="22,6 12,13 2,6"></polyline>
         </svg>
       ),
-      bg: 'bg-cyan-500/10 text-accent'
+      bg: 'bg-warning/10 text-warning'
     });
   }
 
@@ -127,7 +127,7 @@ export default function MfaVerification() {
               <button
                 key={opt.type}
                 type="button"
-                className="w-full bg-white/5 text-text-main border border-card-border hover:bg-white/10 rounded-xl p-4 flex items-center justify-start gap-4 text-left transition-all disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
+                className="w-full bg-black/10 text-text-main border border-card-border hover:border-primary/40 rounded-xl p-4 flex items-center justify-start gap-4 text-left transition-colors disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
                 onClick={() => handleSelectMethod(opt.type)}
                 disabled={loading}
               >

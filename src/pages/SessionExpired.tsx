@@ -19,6 +19,8 @@ import { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import AuthLayout from '../layouts/AuthLayout';
 import { isValidOrigin } from '../utils/security';
+import Button from '../components/ui/Button';
+import IconCircle from '../components/ui/IconCircle';
 
 export default function SessionExpired() {
   const navigate = useNavigate();
@@ -43,13 +45,13 @@ export default function SessionExpired() {
     <AuthLayout>
       <div className="text-center">
         {/* Clock/expired icon */}
-        <div
-          className="w-14 h-14 rounded-full bg-warning/10 text-warning flex items-center justify-center mx-auto mb-5"
-        >
-          <svg width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="10"></circle>
-            <polyline points="12,6 12,12 16,14"></polyline>
-          </svg>
+        <div className="mb-5">
+          <IconCircle variant="warning">
+            <svg width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12,6 12,12 16,14"></polyline>
+            </svg>
+          </IconCircle>
         </div>
 
         <h2 className="text-xl font-semibold mb-2 text-text-main">
@@ -59,13 +61,9 @@ export default function SessionExpired() {
           Your active security session has expired due to inactivity. Please sign in again to continue.
         </p>
 
-        <button
-          type="button"
-          className="w-full py-3 px-6 text-base font-semibold rounded-xl cursor-pointer transition-all flex justify-center items-center gap-2 relative overflow-hidden bg-primary text-white shadow-sm hover:bg-primary-hover hover:shadow-[0_0_20px_rgba(99,102,241,0.25)] focus:outline-none focus:ring-4 focus:ring-primary/20"
-          onClick={handleLoginClick}
-        >
+        <Button type="button" onClick={handleLoginClick}>
           Sign In Again
-        </button>
+        </Button>
       </div>
     </AuthLayout>
   );

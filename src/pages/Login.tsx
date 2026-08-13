@@ -20,6 +20,8 @@ import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import AuthLayout from '../layouts/AuthLayout';
 import { isValidOrigin, sanitizeRedirectUrl } from '../utils/security';
+import Button from '../components/ui/Button';
+import StatusBanner from '../components/ui/StatusBanner';
 import toast from 'react-hot-toast';
 import type { ApiError } from '../types';
 
@@ -146,9 +148,18 @@ export default function Login() {
   return (
     <AuthLayout>
       <form onSubmit={handleSubmit} noValidate>
-        <h2 className="text-xl font-semibold mb-5 text-center text-text-main">
-          Sign In
+        <h2 className="text-2xl font-bold mb-1.5 text-center text-text-main tracking-tight">
+          Welcome back
         </h2>
+        <div className="flex justify-center mb-7">
+          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-text-muted border border-card-border rounded-full px-3 py-1">
+            <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+            Secure authentication
+          </span>
+        </div>
 
         {/* Email Form Group */}
         <div className="mb-5 flex flex-col relative">
@@ -156,10 +167,16 @@ export default function Login() {
             Email Address
           </label>
           <div className="relative flex items-center">
+            <span className="absolute left-3.5 text-text-muted pointer-events-none" aria-hidden="true">
+              <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                <polyline points="22,6 12,13 2,6"></polyline>
+              </svg>
+            </span>
             <input
               id="email"
               type="email"
-              className="w-full px-4 py-3 bg-black/20 border border-card-border rounded-xl text-text-main text-base outline-none transition-all placeholder-text-muted focus:border-primary focus:bg-black/30 focus:ring-4 focus:ring-primary/20"
+              className="w-full pl-11 pr-4 py-3 bg-black/20 border border-card-border rounded-xl text-text-main text-base outline-none transition-all placeholder-text-muted focus:border-primary focus:bg-black/30 focus:ring-4 focus:ring-primary/20"
               placeholder="e.g. name@domain.com"
               value={email}
               onChange={(e) => {
@@ -188,10 +205,16 @@ export default function Login() {
             </Link>
           </div>
           <div className="relative flex items-center">
+            <span className="absolute left-3.5 text-text-muted pointer-events-none" aria-hidden="true">
+              <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+            </span>
             <input
               id="password"
               type={showPassword ? 'text' : 'password'}
-              className="w-full px-4 py-3 bg-black/20 border border-card-border rounded-xl text-text-main text-base outline-none transition-all placeholder-text-muted focus:border-primary focus:bg-black/30 focus:ring-4 focus:ring-primary/20 pr-11"
+              className="w-full pl-11 pr-11 py-3 bg-black/20 border border-card-border rounded-xl text-text-main text-base outline-none transition-all placeholder-text-muted focus:border-primary focus:bg-black/30 focus:ring-4 focus:ring-primary/20"
               placeholder="Enter your password"
               value={password}
               onChange={(e) => {
@@ -227,31 +250,25 @@ export default function Login() {
 
         {/* Global/API Error Messages */}
         {(error || validationError) && (
-          <div className="bg-error/10 border border-error/20 text-error p-3 rounded-xl mb-5 text-sm flex items-center gap-2 animate-[fadeIn_0.25s_ease-out]" role="alert">
-            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true" className="shrink-0">
-              <circle cx="12" cy="12" r="10"></circle>
-              <line x1="12" y1="8" x2="12" y2="12"></line>
-              <line x1="12" y1="16" x2="12.01" y2="16"></line>
-            </svg>
-            <span>{validationError || error}</span>
-          </div>
+          <StatusBanner
+            variant="error"
+            className="mb-5"
+            icon={
+              <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true" className="shrink-0">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
+            }
+          >
+            {validationError || error}
+          </StatusBanner>
         )}
 
         {/* Submit Action */}
-        <button
-          type="submit"
-          className="w-full py-3 px-6 text-base font-semibold rounded-xl cursor-pointer transition-all flex justify-center items-center gap-2 relative overflow-hidden bg-primary text-white shadow-sm hover:bg-primary-hover hover:shadow-[0_0_20px_rgba(99,102,241,0.25)] focus:outline-none focus:ring-4 focus:ring-primary/20 disabled:opacity-60 disabled:cursor-not-allowed"
-          disabled={loading}
-        >
-          {loading ? (
-            <>
-              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" aria-hidden="true"></div>
-              <span>Signing in...</span>
-            </>
-          ) : (
-            <span>Sign In</span>
-          )}
-        </button>
+        <Button type="submit" loading={loading} loadingText="Signing in...">
+          Sign In
+        </Button>
       </form>
     </AuthLayout>
   );

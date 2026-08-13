@@ -21,6 +21,8 @@ import { useAuth } from '../hooks/useAuth';
 import { useCountdown } from '../hooks/useCountdown';
 import AuthLayout from '../layouts/AuthLayout';
 import { isValidOrigin, sanitizeRedirectUrl } from '../utils/security';
+import Button from '../components/ui/Button';
+import StatusBanner from '../components/ui/StatusBanner';
 import type { ApiError, OtpType } from '../types';
 
 // Extracts the human-readable message from an API error response
@@ -251,22 +253,30 @@ export default function VerifyOtp() {
 
         {/* Info / sending state */}
         {mfaInfo && !mfaError && (
-          <div className="bg-primary/10 border border-primary/20 text-primary p-3 rounded-xl mb-4 text-sm flex items-center gap-2 animate-[fadeIn_0.2s_ease-out]" role="status">
-            <div className="w-4 h-4 border-2 border-primary/40 border-t-primary rounded-full animate-spin shrink-0" aria-hidden="true"></div>
-            <span>{mfaInfo}</span>
-          </div>
+          <StatusBanner
+            variant="info"
+            className="mb-4"
+            icon={<span className="w-4 h-4 border-2 border-primary/40 border-t-primary rounded-full animate-spin shrink-0" aria-hidden="true" />}
+          >
+            {mfaInfo}
+          </StatusBanner>
         )}
 
         {/* Errors display */}
         {mfaError && (
-          <div className="bg-error/10 border border-error/20 text-error p-3 rounded-xl mb-5 text-sm flex items-center gap-2 animate-[fadeIn_0.25s_ease-out]" role="alert">
-            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true" className="shrink-0">
-              <circle cx="12" cy="12" r="10"></circle>
-              <line x1="12" y1="8" x2="12" y2="12"></line>
-              <line x1="12" y1="16" x2="12.01" y2="16"></line>
-            </svg>
-            <span>{mfaError}</span>
-          </div>
+          <StatusBanner
+            variant="error"
+            className="mb-5"
+            icon={
+              <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true" className="shrink-0">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
+            }
+          >
+            {mfaError}
+          </StatusBanner>
         )}
 
         {/* 6 Digit Input Group */}
@@ -291,20 +301,9 @@ export default function VerifyOtp() {
         </div>
 
         {/* Action Button */}
-        <button
-          type="submit"
-          className="w-full py-3 px-6 text-base font-semibold rounded-xl cursor-pointer transition-all flex justify-center items-center gap-2 relative overflow-hidden bg-primary text-white shadow-sm hover:bg-primary-hover hover:shadow-[0_0_20px_rgba(99,102,241,0.25)] focus:outline-none focus:ring-4 focus:ring-primary/20 disabled:opacity-60 disabled:cursor-not-allowed mb-5"
-          disabled={loading}
-        >
-          {loading ? (
-            <>
-              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" aria-hidden="true"></div>
-              <span>Verifying...</span>
-            </>
-          ) : (
-            <span>Verify Code</span>
-          )}
-        </button>
+        <Button type="submit" className="mb-5" loading={loading} loadingText="Verifying...">
+          Verify Code
+        </Button>
 
         {/* Resend Action */}
         <div className="flex justify-between items-center text-sm mt-2">
