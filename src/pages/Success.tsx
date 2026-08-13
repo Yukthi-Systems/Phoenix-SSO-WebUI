@@ -132,7 +132,7 @@ export default function Success() {
 
           <div className="flex flex-col gap-4 mt-4">
             {/* Account Profile */}
-            <div className="px-4 bg-black/10 border border-card-border rounded-2xl">
+            <div className="px-4 bg-surface-inset border border-card-border rounded-2xl">
               <h3 className="text-xs font-semibold uppercase tracking-wider text-primary flex items-center gap-2 pt-3.5 pb-1">
                 <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
@@ -178,7 +178,7 @@ export default function Success() {
             </div>
 
             {/* Security & MFA Settings */}
-            <div className="px-4 bg-black/10 border border-card-border rounded-2xl">
+            <div className="px-4 bg-surface-inset border border-card-border rounded-2xl">
               <h3 className="text-xs font-semibold uppercase tracking-wider text-accent flex items-center gap-2 pt-3.5 pb-1">
                 <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>

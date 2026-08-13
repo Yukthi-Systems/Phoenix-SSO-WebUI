@@ -285,7 +285,7 @@ export default function ForgotPassword() {
               <input
                 id="reset-email"
                 type="text"
-                className="w-full px-4 py-3 bg-black/20 border border-card-border rounded-xl text-text-main text-base outline-none transition-all placeholder-text-muted focus:border-primary focus:bg-black/30 focus:ring-4 focus:ring-primary/20"
+                className="w-full px-4 py-3 bg-surface-inset-strong border border-card-border rounded-xl text-text-main text-base outline-none transition-all placeholder-text-muted focus:border-primary focus:bg-surface-inset-focus focus:ring-4 focus:ring-primary/20"
                 placeholder="e.g. username or email"
                 value={email}
                 onChange={(e) => {
@@ -302,7 +302,7 @@ export default function ForgotPassword() {
                 Verification Method
               </label>
               <div className="flex gap-4">
-                <label className={`flex-1 flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 p-3 transition-all ${verifyMethod === 'email' ? 'border-primary bg-primary/10 text-primary' : 'border-card-border bg-black/20 text-text-muted hover:border-primary/50'}`}>
+                <label className={`flex-1 flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 p-3 transition-all ${verifyMethod === 'email' ? 'border-primary bg-primary/10 text-primary' : 'border-card-border bg-surface-inset-strong text-text-muted hover:border-primary/50'}`}>
                   <input
                     type="radio"
                     name="verifyMethod"
@@ -314,7 +314,7 @@ export default function ForgotPassword() {
                   <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
                   <span className="text-sm font-medium">Email</span>
                 </label>
-                <label className={`flex-1 flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 p-3 transition-all ${verifyMethod === 'phone' ? 'border-primary bg-primary/10 text-primary' : 'border-card-border bg-black/20 text-text-muted hover:border-primary/50'}`}>
+                <label className={`flex-1 flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 p-3 transition-all ${verifyMethod === 'phone' ? 'border-primary bg-primary/10 text-primary' : 'border-card-border bg-surface-inset-strong text-text-muted hover:border-primary/50'}`}>
                   <input
                     type="radio"
                     name="verifyMethod"
@@ -378,7 +378,7 @@ export default function ForgotPassword() {
                     key={index}
                     id={`otp-input-${index}`}
                     type="text"
-                    className="w-10 h-12 md:w-12 md:h-14 text-center text-xl md:text-2xl font-bold rounded-xl bg-black/20 border border-card-border text-text-main outline-none transition-all placeholder-text-muted focus:border-primary focus:bg-black/30 focus:ring-4 focus:ring-primary/20 uppercase"
+                    className="w-10 h-12 md:w-12 md:h-14 text-center text-xl md:text-2xl font-bold rounded-xl bg-surface-inset-strong border border-card-border text-text-main outline-none transition-all placeholder-text-muted focus:border-primary focus:bg-surface-inset-focus focus:ring-4 focus:ring-primary/20 uppercase"
                     value={digit}
                     onChange={(e) => handleOtpChange(e, index)}
                     onKeyDown={(e) => handleOtpKeyDown(e, index)}
@@ -410,7 +410,7 @@ export default function ForgotPassword() {
                 <input
                   id="reset-new-password"
                   type={showPassword ? 'text' : 'password'}
-                  className="w-full px-4 py-3 bg-black/20 border border-card-border rounded-xl text-text-main text-base outline-none transition-all placeholder-text-muted focus:border-primary focus:bg-black/30 focus:ring-4 focus:ring-primary/20 pr-11"
+                  className="w-full px-4 py-3 bg-surface-inset-strong border border-card-border rounded-xl text-text-main text-base outline-none transition-all placeholder-text-muted focus:border-primary focus:bg-surface-inset-focus focus:ring-4 focus:ring-primary/20 pr-11"
                   placeholder="At least 8 characters"
                   value={newPassword}
                   onChange={(e) => {
@@ -448,7 +448,7 @@ export default function ForgotPassword() {
                   <span>Password Strength</span>
                   <span className="font-semibold">{strength.label}</span>
                 </div>
-                <div className="h-1.5 w-full bg-black/10 rounded-full overflow-hidden flex gap-0.5">
+                <div className="h-1.5 w-full bg-surface-inset rounded-full overflow-hidden flex gap-0.5">
                   <div className={`h-full transition-all duration-300 ${strength.color}`} style={{ width: `${(strength.score / 5) * 100}%` }}></div>
                 </div>
               </div>
@@ -462,7 +462,7 @@ export default function ForgotPassword() {
               <input
                 id="reset-confirm-password"
                 type="password"
-                className="w-full px-4 py-3 bg-black/20 border border-card-border rounded-xl text-text-main text-base outline-none transition-all placeholder-text-muted focus:border-primary focus:bg-black/30 focus:ring-4 focus:ring-primary/20"
+                className="w-full px-4 py-3 bg-surface-inset-strong border border-card-border rounded-xl text-text-main text-base outline-none transition-all placeholder-text-muted focus:border-primary focus:bg-surface-inset-focus focus:ring-4 focus:ring-primary/20"
                 placeholder="Confirm password"
                 value={confirmPassword}
                 onChange={(e) => {

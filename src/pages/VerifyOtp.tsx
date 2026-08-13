@@ -288,7 +288,7 @@ export default function VerifyOtp() {
               type="text"
               inputMode="numeric"
               pattern="[0-9]*"
-              className="w-12 h-14 text-center text-2xl font-bold rounded-xl bg-black/20 border border-card-border text-text-main outline-none transition-all placeholder-text-muted focus:border-primary focus:bg-black/30 focus:ring-4 focus:ring-primary/20"
+              className="w-12 h-14 text-center text-2xl font-bold rounded-xl bg-surface-inset-strong border border-card-border text-text-main outline-none transition-all placeholder-text-muted focus:border-primary focus:bg-surface-inset-focus focus:ring-4 focus:ring-primary/20"
               value={digit}
               onChange={(e) => handleChange(e, index)}
               onKeyDown={(e) => handleKeyDown(e, index)}

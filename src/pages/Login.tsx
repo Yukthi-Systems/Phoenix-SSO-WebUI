@@ -176,7 +176,7 @@ export default function Login() {
             <input
               id="email"
               type="email"
-              className="w-full pl-11 pr-4 py-3 bg-black/20 border border-card-border rounded-xl text-text-main text-base outline-none transition-all placeholder-text-muted focus:border-primary focus:bg-black/30 focus:ring-4 focus:ring-primary/20"
+              className="w-full pl-11 pr-4 py-3 bg-surface-inset-strong border border-card-border rounded-xl text-text-main text-base outline-none transition-all placeholder-text-muted focus:border-primary focus:bg-surface-inset-focus focus:ring-4 focus:ring-primary/20"
               placeholder="e.g. name@domain.com"
               value={email}
               onChange={(e) => {
@@ -214,7 +214,7 @@ export default function Login() {
             <input
               id="password"
               type={showPassword ? 'text' : 'password'}
-              className="w-full pl-11 pr-11 py-3 bg-black/20 border border-card-border rounded-xl text-text-main text-base outline-none transition-all placeholder-text-muted focus:border-primary focus:bg-black/30 focus:ring-4 focus:ring-primary/20"
+              className="w-full pl-11 pr-11 py-3 bg-surface-inset-strong border border-card-border rounded-xl text-text-main text-base outline-none transition-all placeholder-text-muted focus:border-primary focus:bg-surface-inset-focus focus:ring-4 focus:ring-primary/20"
               placeholder="Enter your password"
               value={password}
               onChange={(e) => {

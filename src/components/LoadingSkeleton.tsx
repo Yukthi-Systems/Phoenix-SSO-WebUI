@@ -25,11 +25,11 @@ interface LoadingSkeletonProps {
 export default function LoadingSkeleton({ lines = 3 }: LoadingSkeletonProps) {
   return (
     <div className="flex flex-col gap-4" aria-hidden="true">
-      <div className="w-[60px] h-[60px] bg-black/10 rounded-full mx-auto mb-4"></div>
+      <div className="w-[60px] h-[60px] bg-surface-inset rounded-full mx-auto mb-4"></div>
       {Array.from({ length: lines }).map((_, index) => (
         <div
           key={index}
-          className={`bg-gradient-to-r from-black/5 via-black/10 to-black/5 bg-[length:200%_100%] animate-skeleton-shimmer rounded-lg mx-auto ${
+          className={`bg-gradient-to-r from-surface-inset via-surface-inset-strong to-surface-inset bg-[length:200%_100%] animate-skeleton-shimmer rounded-lg mx-auto ${
             index === lines - 1 ? 'h-9 w-[80%]' : 'h-12 w-full'
           }`}
         ></div>

@@ -31,6 +31,9 @@
   --color-text-main: var(--text-primary);
   --color-text-sub: var(--text-secondary);
   --color-text-muted: var(--text-muted);
+  --color-surface-inset: var(--surface-inset);
+  --color-surface-inset-strong: var(--surface-inset-strong);
+  --color-surface-inset-focus: var(--surface-inset-focus);
 
   --animate-slide-up: slideInUp 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
   --animate-skeleton-shimmer: skeleton-shimmer 1.5s infinite;
@@ -62,6 +65,10 @@
   --text-primary: hsl(0, 0%, 95%);
   --text-secondary: hsl(220, 10%, 65%);
   --text-muted: hsl(220, 8%, 45%);
+
+  --surface-inset: rgba(0, 0, 0, 0.15);
+  --surface-inset-strong: rgba(0, 0, 0, 0.22);
+  --surface-inset-focus: rgba(0, 0, 0, 0.32);
 
   --primary: hsl(228, 68%, 60%);
   --primary-hover: hsl(228, 72%, 66%);
@@ -97,6 +104,10 @@
   --text-primary: hsl(222, 25%, 16%);
   --text-secondary: hsl(220, 10%, 40%);
   --text-muted: hsl(220, 8%, 55%);
+
+  --surface-inset: rgba(15, 23, 42, 0.035);
+  --surface-inset-strong: rgba(15, 23, 42, 0.05);
+  --surface-inset-focus: rgba(15, 23, 42, 0.08);
 
   --primary: hsl(228, 62%, 50%);
   --primary-hover: hsl(228, 66%, 45%);

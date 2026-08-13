@@ -127,7 +127,7 @@ export default function MfaVerification() {
               <button
                 key={opt.type}
                 type="button"
-                className="w-full bg-black/10 text-text-main border border-card-border hover:border-primary/40 rounded-xl p-4 flex items-center justify-start gap-4 text-left transition-colors disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
+                className="w-full bg-surface-inset text-text-main border border-card-border hover:border-primary/40 rounded-xl p-4 flex items-center justify-start gap-4 text-left transition-colors disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
                 onClick={() => handleSelectMethod(opt.type)}
                 disabled={loading}
               >

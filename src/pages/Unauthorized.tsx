@@ -39,7 +39,7 @@ export default function Unauthorized() {
           The application requesting authentication is not authorized to interact with this SSO provider, or the redirect coordinates are invalid.
         </p>
 
-        <div className="bg-black/10 border border-card-border rounded-lg p-3 text-xs text-text-muted text-left mb-5">
+        <div className="bg-surface-inset border border-card-border rounded-lg p-3 text-xs text-text-muted text-left mb-5">
           <strong>Security Notice:</strong> To register a new application domain or update your whitelist configuration, please contact the network administrator for <em>{getBrandName()}</em>.
         </div>
       </div>
