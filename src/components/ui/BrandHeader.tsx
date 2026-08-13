@@ -27,8 +27,11 @@ export default function BrandHeader({ appName }: BrandHeaderProps) {
   return (
     <div className="text-center mb-7">
       <div className="inline-flex items-center gap-2.5">
-        <div className="w-[38px] h-[38px] rounded-[10px] bg-primary flex items-center justify-center font-bold text-white text-base">
-          {brand.charAt(0).toUpperCase()}
+        <div className="w-[38px] h-[38px] rounded-[10px] bg-primary flex items-center justify-center text-white" aria-hidden="true">
+          <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+            <polyline points="22,6 12,13 2,6"></polyline>
+          </svg>
         </div>
         <span className="text-xl font-bold tracking-tight text-text-main">{brand}</span>
       </div>
