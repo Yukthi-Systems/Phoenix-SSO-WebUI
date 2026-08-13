@@ -58,7 +58,7 @@ export default function Login() {
       window.location.href = sanitized;
     } else {
       // Standard fallback landing message to the premium success page
-      navigate('/success', { replace: true });
+      navigate('/authenticated', { replace: true });
     }
   };
 
@@ -66,7 +66,7 @@ export default function Login() {
     // 1. Immediately check for SSO-Session-ID browser cookie
     const hasSsoSession = document.cookie.split(';').some(item => item.trim().startsWith('SSO-Session-ID='));
     if (hasSsoSession) {
-      navigate('/success', { replace: true });
+      navigate('/authenticated', { replace: true });
       return;
     }
 

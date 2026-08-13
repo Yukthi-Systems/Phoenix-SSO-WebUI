@@ -36,7 +36,7 @@ export default function SessionCheck() {
       // 1. Immediately check for SSO-Session-ID browser cookie
       const hasSsoSession = document.cookie.split(';').some(item => item.trim().startsWith('SSO-Session-ID='));
       if (hasSsoSession) {
-        navigate('/success', { replace: true });
+        navigate('/authenticated', { replace: true });
         return;
       }
 
@@ -59,7 +59,7 @@ export default function SessionCheck() {
           window.location.href = sanitized;
         } else {
           // No destination target. Show safe authenticated portal card.
-          navigate('/success', { replace: true });
+          navigate('/authenticated', { replace: true });
         }
       } else {
         // 4. No active session -> route to login, preserving context params

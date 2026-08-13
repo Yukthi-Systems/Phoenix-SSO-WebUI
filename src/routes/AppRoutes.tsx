@@ -44,7 +44,7 @@ export default function AppRoutes() {
       <Route path="/mfa-verification" element={<MfaVerification />} />
       <Route path="/silent-auth" element={<SilentAuth />} />
       <Route path="/logout" element={<Logout />} />
-      <Route path="/success" element={<Success />} />
+      <Route path="/authenticated" element={<Success />} />
 
       {/* Feedback Routes */}
       <Route path="/error" element={<ErrorPage />} />
