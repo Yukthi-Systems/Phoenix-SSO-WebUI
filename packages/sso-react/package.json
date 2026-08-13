@@ -1,6 +1,6 @@
 {
   "name": "@rjyspl/phoenix-sso-react",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "React SDK for Yukthi Single Sign-On — provider, hooks, and components to add SSO to any app without hand-rolling the popup/postMessage handshake.",
   "license": "GPL-3.0-only",
   "author": "Yukthi Systems Private Limited",
