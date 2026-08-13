@@ -15,11 +15,12 @@
  * <https://www.gnu.org/licenses/>.
  */
 
-import type { ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import BrandHeader from '../components/ui/BrandHeader';
 import Footer from '../components/ui/Footer';
 import ThemeToggle from '../components/ui/ThemeToggle';
+import { applyBrandColor } from '../utils/color';
 
 /**
  * Visual Layout Wrapper implementing HSL Theme triggers and responsiveness.
@@ -30,6 +31,11 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
   // Detect if SSO page is loaded in a compact login popup
   const isPopup = searchParams.get('mode') === 'popup';
   const appName = searchParams.get('app') || 'App';
+  const themeColor = searchParams.get('theme_color');
+
+  useEffect(() => {
+    if (themeColor) applyBrandColor(themeColor);
+  }, [themeColor]);
 
   return (
     <div className={`flex flex-col min-h-screen justify-center items-center w-full ${isPopup ? 'p-0' : 'p-4'}`}>

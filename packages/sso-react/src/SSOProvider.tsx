@@ -47,6 +47,8 @@ export function SSOProvider({
   ssoUrl,
   appId,
   silentAuthTimeoutMs,
+  theme,
+  themeColor,
   onAuthenticated,
   onSignOut,
   skipInitialCheck = false,
@@ -81,13 +83,13 @@ export function SSOProvider({
   const signIn = useCallback(async () => {
     setError(null);
     try {
-      await openLoginPopup(ssoUrl, appId);
+      await openLoginPopup(ssoUrl, appId, { theme, themeColor });
     } catch (err) {
       if (err instanceof PopupBlockedError) {
         // Fall back to a full-page redirect instead of surfacing an error —
         // the browser navigates away, so this call never needs to resolve.
         // On return, the mount-time silent check picks up the new session.
-        redirectToLogin(ssoUrl, appId);
+        redirectToLogin(ssoUrl, appId, { theme, themeColor });
         return new Promise<void>(() => {});
       }
       setError((err as Error).message || 'Sign in failed.');
@@ -104,7 +106,7 @@ export function SSOProvider({
       throw err;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ssoUrl, appId]);
+  }, [ssoUrl, appId, theme, themeColor]);
 
   const signOut = useCallback(async () => {
     cancelLoginPopup();

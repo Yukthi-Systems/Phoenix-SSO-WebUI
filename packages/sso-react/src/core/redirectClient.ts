@@ -15,16 +15,20 @@
  * <https://www.gnu.org/licenses/>.
  */
 
-export interface RedirectToLoginOptions {
+import type { SSOAppearance } from '../types';
+import { applyAppearanceParams } from './appearance';
+
+export interface RedirectToLoginOptions extends SSOAppearance {
   /** Where the SSO service should send the browser back after login. Defaults to the current page URL. */
   returnTo?: string;
 }
 
 /** Builds the full-page (non-popup) SSO login URL. */
-export function buildLoginRedirectUrl(ssoUrl: string, appId: string, returnTo: string): string {
+export function buildLoginRedirectUrl(ssoUrl: string, appId: string, returnTo: string, appearance?: SSOAppearance): string {
   const url = new URL(`${ssoUrl}/login`);
   url.searchParams.set('app', appId);
   url.searchParams.set('redirect_uri', returnTo);
+  applyAppearanceParams(url, appearance);
   return url.toString();
 }
 
@@ -36,5 +40,5 @@ export function buildLoginRedirectUrl(ssoUrl: string, appId: string, returnTo: s
  */
 export function redirectToLogin(ssoUrl: string, appId: string, options: RedirectToLoginOptions = {}): void {
   const returnTo = options.returnTo ?? window.location.href;
-  window.location.href = buildLoginRedirectUrl(ssoUrl, appId, returnTo);
+  window.location.href = buildLoginRedirectUrl(ssoUrl, appId, returnTo, options);
 }

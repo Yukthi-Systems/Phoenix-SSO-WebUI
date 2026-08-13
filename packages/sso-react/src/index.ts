@@ -40,6 +40,7 @@ export type { RedirectToLoginOptions } from './core/redirectClient';
 
 export type {
   SSOConfig,
+  SSOAppearance,
   SSOStatus,
   SSOAuthContextValue,
   SsoMessage,

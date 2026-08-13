@@ -122,6 +122,8 @@ GET {ssoUrl}/login?mode=popup&app={appId}&origin={encoded current origin}      #
 GET {ssoUrl}/login?app={appId}&redirect_uri={encoded return URL}               # redirect mode (no "mode" param)
 ```
 
+Both forms may additionally carry `theme={dark|light}` and/or `theme_color={hex color}` (see [`SSOAppearance`](#types) below) if the caller passed them — an SSO service isn't required to honor these, but should ignore them harmlessly if it doesn't.
+
 - **Popup mode** (`mode=popup` present): after authentication, `window.opener.postMessage(...)` back to the popup's opener, targeting the exact `origin` query param value:
   ```ts
   { type: 'SSO_AUTH_SUCCESS' }
@@ -167,6 +169,8 @@ The state-managing provider for the hooks/components tier. Wrap your app (or the
   appId="my-app"
   silentAuthTimeoutMs={5000}
   skipInitialCheck={false}
+  theme="dark"
+  themeColor="#4f46e5"
   onAuthenticated={() => myApi.post('/auth/login', {}, { withCredentials: true })}
   onSignOut={() => myApi.post('/auth/logout')}
 >
@@ -183,6 +187,8 @@ The state-managing provider for the hooks/components tier. Wrap your app (or the
 | `onSignOut` | `() => void \| Promise<void>` | no | Runs when `signOut()` is called, before the SSO session is invalidated and before local status resets. Typically your own backend logout call plus any local cleanup (query cache, sockets, etc). If it throws, the error is logged (`console.warn`) but sign-out still proceeds. |
 | `silentAuthTimeoutMs` | `number` | no | Timeout for the mount-time silent (iframe) session check. Default `5000`. |
 | `skipInitialCheck` | `boolean` | no | Skip the automatic silent check on mount. Default `false`. If `true`, `status` starts as `'unauthenticated'` instead of `'checking'`. |
+| `theme` | `'dark' \| 'light'` | no | Forces the SSO UI's initial color theme (e.g. to match your app's current theme) instead of the visitor's saved preference/OS setting. Passed through to `signIn()`'s popup and redirect-fallback. Only takes effect if the SSO service supports it. |
+| `themeColor` | `string` | no | Brand color (hex, e.g. `"#4f46e5"`) applied to the SSO UI's primary accent/buttons. Passed through the same way as `theme`. Only takes effect if the SSO service supports it. |
 
 ### `useSSOAuth()`
 
@@ -254,7 +260,12 @@ Opens the SSO login popup and waits for the result.
 import { openLoginPopup, PopupBlockedError } from '@rjyspl/phoenix-sso-react';
 
 try {
-  await openLoginPopup('https://sso.example.com', 'my-app', { width: 480, height: 620 });
+  await openLoginPopup('https://sso.example.com', 'my-app', {
+    width: 480,
+    height: 620,
+    theme: 'dark',
+    themeColor: '#4f46e5',
+  });
   // popup succeeded — SSO cookie is now set
 } catch (err) {
   if (err instanceof PopupBlockedError) { /* see redirectToLogin below */ }
@@ -268,6 +279,7 @@ try {
   - `Error('Login popup was closed before completing authentication.')` — the user closed it.
   - `Error(<message from the SSO service>)` — the SSO service posted back `SSO_AUTH_FAILED`.
 - **`options.width`** / **`options.height`** — popup dimensions in pixels. Default `480×620`.
+- **`options.theme`** / **`options.themeColor`** — see [`SSOAppearance`](#types) below.
 
 Only one popup can be in flight at a time — calling this again cancels any previous attempt.
 
@@ -332,15 +344,19 @@ redirectToLogin('https://sso.example.com', 'my-app', {
 
 - **Returns:** `void` — the browser navigates away; there's nothing to await.
 - **`options.returnTo`** — where the SSO service sends the browser back after login. Defaults to `window.location.href`.
+- **`options.theme`** / **`options.themeColor`** — see [`SSOAppearance`](#types) below.
 - On the way back, there's no popup and no `postMessage` — you need your own signal for "I just came back from an SSO redirect" (e.g. a query param you add to `returnTo`, as above) so you know to skip straight to your backend token exchange instead of trying to sign in again. If you're using `<SSOProvider>` instead of the raw primitives, you don't need to do any of this — the provider's mount-time silent check picks up the new session automatically.
 
-### `buildLoginRedirectUrl(ssoUrl, appId, returnTo)`
+### `buildLoginRedirectUrl(ssoUrl, appId, returnTo, appearance?)`
 
 The pure URL-builder `redirectToLogin` uses internally, exposed in case you want to construct the URL yourself (e.g. for a plain `<a href>` instead of a JS-triggered navigation).
 
 ```ts
 buildLoginRedirectUrl('https://sso.example.com', 'my-app', 'https://my-app.com/login')
 // => 'https://sso.example.com/login?app=my-app&redirect_uri=https%3A%2F%2Fmy-app.com%2Flogin'
+
+buildLoginRedirectUrl('https://sso.example.com', 'my-app', 'https://my-app.com/login', { theme: 'dark' })
+// => '...&redirect_uri=...&theme=dark'
 ```
 
 - **Returns:** `string`.
@@ -352,12 +368,13 @@ buildLoginRedirectUrl('https://sso.example.com', 'my-app', 'https://my-app.com/l
 | Type | Shape |
 | --- | --- |
 | `SSOStatus` | `'checking' \| 'authenticated' \| 'unauthenticated'` |
-| `SSOConfig` | `{ ssoUrl: string; appId: string; silentAuthTimeoutMs?: number }` |
+| `SSOAppearance` | `{ theme?: 'dark' \| 'light'; themeColor?: string }` — optional visual hints passed through to the SSO service; honoring them is up to the SSO service. |
+| `SSOConfig` | `SSOAppearance & { ssoUrl: string; appId: string; silentAuthTimeoutMs?: number }` |
 | `SSOAuthContextValue` | See `useSSOAuth()` above. |
 | `SsoMessageType` | `'SSO_AUTH_SUCCESS' \| 'SSO_AUTH_FAILED' \| 'SSO_SESSION_EXPIRED' \| 'SSO_LOGOUT'` — the wire protocol's `postMessage` types. |
 | `SsoMessage` | `{ type: SsoMessageType; message?: string; payload?: unknown }` |
-| `OpenLoginPopupOptions` | `{ width?: number; height?: number }` |
-| `RedirectToLoginOptions` | `{ returnTo?: string }` |
+| `OpenLoginPopupOptions` | `SSOAppearance & { width?: number; height?: number }` |
+| `RedirectToLoginOptions` | `SSOAppearance & { returnTo?: string }` |
 | `SignInButtonProps` | Native `<button>` props (minus `type`) plus `{ children?: ReactNode }`. |
 | `ProtectedRouteProps` | `{ children: ReactNode; fallback: ReactNode; loading?: ReactNode }` |
 | `SSOProviderProps` | `SSOConfig & { children: ReactNode; onAuthenticated?; onSignOut?; skipInitialCheck?: boolean }` |

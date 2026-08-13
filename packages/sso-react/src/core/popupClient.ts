@@ -15,7 +15,8 @@
  * <https://www.gnu.org/licenses/>.
  */
 
-import type { SsoMessage } from '../types';
+import type { SsoMessage, SSOAppearance } from '../types';
+import { applyAppearanceParams } from './appearance';
 
 // Module-level state mirrors a single in-flight login popup — matches the
 // assumption already made by the hosted SSO app's own popup flow that only
@@ -39,7 +40,7 @@ function cleanup(): void {
   }
 }
 
-export interface OpenLoginPopupOptions {
+export interface OpenLoginPopupOptions extends SSOAppearance {
   width?: number;
   height?: number;
 }
@@ -78,6 +79,7 @@ export function openLoginPopup(ssoUrl: string, appId: string, options: OpenLogin
     targetUrl.searchParams.set('mode', 'popup');
     targetUrl.searchParams.set('app', appId);
     targetUrl.searchParams.set('origin', window.location.origin);
+    applyAppearanceParams(targetUrl, options);
 
     activePopup = window.open(
       targetUrl.toString(),

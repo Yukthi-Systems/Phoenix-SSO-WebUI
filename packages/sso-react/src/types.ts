@@ -17,7 +17,21 @@
 
 export type SSOStatus = 'checking' | 'authenticated' | 'unauthenticated';
 
-export interface SSOConfig {
+export interface SSOAppearance {
+  /**
+   * Forces the SSO UI's initial color theme instead of letting it fall back to
+   * the visitor's saved preference or OS setting — use this to match your
+   * app's current theme (e.g. in a popup or embedded redirect).
+   */
+  theme?: 'dark' | 'light';
+  /**
+   * Brand color (hex, e.g. "#4f46e5") applied to the SSO UI's primary accent
+   * and buttons in place of the default branding. Invalid values are ignored.
+   */
+  themeColor?: string;
+}
+
+export interface SSOConfig extends SSOAppearance {
   /** Base URL of the hosted Yukthi SSO service, e.g. "https://sso.yukthi.net" */
   ssoUrl: string;
   /** Identifier for this application, sent to the SSO service as the `app` param */
