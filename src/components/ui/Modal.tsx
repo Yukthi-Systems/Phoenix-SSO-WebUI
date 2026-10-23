@@ -50,7 +50,7 @@ export default function Modal({ open, onClose, title, description, children }: M
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
-      className="m-auto w-[calc(100%-2rem)] max-w-md p-0 bg-card text-text-main border border-card-border rounded-2xl shadow-xl backdrop:bg-black/60 backdrop:backdrop-blur-md"
+      className="m-auto w-[calc(100%-2rem)] max-w-md max-h-[calc(100dvh-2rem)] overflow-y-auto p-0 bg-modal text-text-main border border-card-border rounded-2xl shadow-2xl"
     >
       <div className="p-5 sm:p-6">
         <div className="flex items-start justify-between gap-4 mb-5">

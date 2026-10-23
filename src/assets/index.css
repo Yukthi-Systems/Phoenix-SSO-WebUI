@@ -28,6 +28,7 @@
   --color-warning: var(--warning);
   --color-card: var(--card-bg);
   --color-card-border: var(--card-border);
+  --color-modal: var(--modal-bg);
   --color-text-main: var(--text-primary);
   --color-text-sub: var(--text-secondary);
   --color-text-muted: var(--text-muted);
@@ -61,6 +62,8 @@
     radial-gradient(circle at 50% 42%, hsl(228, 55%, 30%, 0.3) 0%, hsl(228, 55%, 30%, 0.12) 30%, transparent 72%),
     radial-gradient(circle at top right, hsl(222, 20%, 10%), hsl(222, 22%, 7%));
   --card-bg: hsl(222, 20%, 14%, 0.55);
+  /* Modals sit over a dimmed backdrop, so they need an opaque surface (no glass) */
+  --modal-bg: hsl(222, 20%, 13%);
   --card-border: rgba(255, 255, 255, 0.1);
   --text-primary: hsl(0, 0%, 95%);
   --text-secondary: hsl(220, 10%, 65%);
@@ -100,6 +103,7 @@
     radial-gradient(circle at 50% 42%, hsl(228, 65%, 78%, 0.35) 0%, hsl(228, 65%, 78%, 0.14) 30%, transparent 72%),
     radial-gradient(circle at top right, hsl(220, 20%, 97%), hsl(220, 20%, 95%));
   --card-bg: hsl(0, 0%, 100%, 0.5);
+  --modal-bg: hsl(0, 0%, 100%);
   --card-border: rgba(0, 0, 0, 0.08);
   --text-primary: hsl(222, 25%, 16%);
   --text-secondary: hsl(220, 10%, 40%);
@@ -130,4 +134,14 @@ body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Modal backdrop — plain values, since ::backdrop doesn't reliably inherit custom properties */
+dialog::backdrop {
+  background: rgb(2 6 23 / 0.45);
+  backdrop-filter: blur(10px);
+}
+
+[data-theme="light"] dialog::backdrop {
+  background: rgb(15 23 42 / 0.3);
 }

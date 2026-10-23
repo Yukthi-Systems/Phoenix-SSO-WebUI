@@ -73,7 +73,8 @@ export default function Success() {
   const [profileLoading, setProfileLoading] = useState(true);
   const [profileError, setProfileError] = useState('');
 
-  // Inline edit state
+  // Account details modal; `editing` switches it from view to edit mode
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState('');
@@ -154,6 +155,12 @@ export default function Success() {
     }
   };
 
+  const closeDetails = () => {
+    if (saving) return;
+    setDetailsOpen(false);
+    setEditing(false);
+  };
+
   const handleLogout = async () => {
     try {
       await logout();
@@ -227,25 +234,103 @@ export default function Success() {
           />
         </div>
 
-        {/* Collapsible account details */}
-        <details className="w-full text-left group">
-          <summary className="cursor-pointer list-none flex items-center justify-center gap-1.5 text-sm font-medium text-text-sub hover:text-text-main transition-colors py-1 select-none">
-            <span>View account details</span>
-            <svg
-              width="14"
-              height="14"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-              className="transition-transform duration-200 group-open:rotate-180"
-            >
-              <polyline points="6 9 12 15 18 9"></polyline>
-            </svg>
-          </summary>
+        {/* Account details (opens modal) */}
+        <button
+          type="button"
+          onClick={() => setDetailsOpen(true)}
+          className="inline-flex items-center underline justify-center gap-1.5 text-sm font-medium text-text-sub hover:text-text-main transition-colors py-1 px-2 rounded-lg cursor-pointer focus:outline-none focus:ring-4 focus:ring-primary/20"
+        >
+          <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+          <span>View account details</span>
+        </button>
 
-          <div className="flex flex-col gap-4 mt-4">
+        {/* Action Button */}
+        <Button variant="secondary" onClick={handleLogout} loading={loading} loadingText="Signing out...">
+          <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          </svg>
+          <span>Sign Out</span>
+        </Button>
+
+      </div>
+
+      <Modal
+        open={detailsOpen}
+        onClose={closeDetails}
+        title={editing ? 'Edit profile' : 'Account details'}
+        description={editing ? 'Update your name and secondary email address.' : 'Your profile and sign-in security settings.'}
+      >
+        {editing ? (
+          <form onSubmit={handleSave} noValidate className="flex flex-col gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="profile-first-name" className="text-sm font-medium text-text-sub">First name</label>
+                <input
+                  id="profile-first-name"
+                  className={inputClasses}
+                  value={form.first_name}
+                  onChange={(e) => { setForm(f => ({ ...f, first_name: e.target.value })); setFormError(''); }}
+                  disabled={saving}
+                  autoComplete="given-name"
+                  required
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="profile-last-name" className="text-sm font-medium text-text-sub">Last name</label>
+                <input
+                  id="profile-last-name"
+                  className={inputClasses}
+                  value={form.last_name}
+                  onChange={(e) => { setForm(f => ({ ...f, last_name: e.target.value })); setFormError(''); }}
+                  disabled={saving}
+                  autoComplete="family-name"
+                />
+              </div>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="profile-secondary-email" className="text-sm font-medium text-text-sub">Secondary email</label>
+              <input
+                id="profile-secondary-email"
+                type="email"
+                className={inputClasses}
+                value={form.secondary_email}
+                onChange={(e) => { setForm(f => ({ ...f, secondary_email: e.target.value })); setFormError(''); }}
+                disabled={saving}
+                autoComplete="email"
+                placeholder="Optional"
+              />
+            </div>
+
+            {formError && (
+              <StatusBanner variant="error">{formError}</StatusBanner>
+            )}
+
+            <div className="flex justify-end gap-2 pt-1">
+              <button
+                type="button"
+                className="inline-flex items-center text-sm font-medium px-4 py-2 rounded-lg border border-card-border text-text-sub hover:text-text-main hover:bg-white/5 transition-colors cursor-pointer focus:outline-none focus:ring-4 focus:ring-primary/20 disabled:opacity-60 disabled:cursor-not-allowed"
+                onClick={() => { setEditing(false); setFormError(''); }}
+                disabled={saving}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="inline-flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary-hover transition-colors cursor-pointer focus:outline-none focus:ring-4 focus:ring-primary/20 disabled:opacity-60 disabled:cursor-not-allowed"
+                disabled={saving}
+              >
+                {saving && (
+                  <span className="w-3 h-3 border-2 border-current/30 border-t-current rounded-full animate-spin" aria-hidden="true" />
+                )}
+                {saving ? 'Saving...' : 'Save changes'}
+              </button>
+            </div>
+          </form>
+        ) : (
+          <div className="flex flex-col gap-4">
             {profileError && (
               <StatusBanner variant="error">
                 {profileError}
@@ -365,89 +450,7 @@ export default function Success() {
               </div>
             </div>
           </div>
-        </details>
-
-        {/* Action Button */}
-        <Button variant="secondary" onClick={handleLogout} loading={loading} loadingText="Signing out...">
-          <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-          </svg>
-          <span>Sign Out</span>
-        </Button>
-
-      </div>
-
-      <Modal
-        open={editing}
-        onClose={() => { if (!saving) setEditing(false); }}
-        title="Edit profile"
-        description="Update your name and secondary email address."
-      >
-        <form onSubmit={handleSave} noValidate className="flex flex-col gap-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="profile-first-name" className="text-sm font-medium text-text-sub">First name</label>
-              <input
-                id="profile-first-name"
-                className={inputClasses}
-                value={form.first_name}
-                onChange={(e) => { setForm(f => ({ ...f, first_name: e.target.value })); setFormError(''); }}
-                disabled={saving}
-                autoComplete="given-name"
-                required
-              />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="profile-last-name" className="text-sm font-medium text-text-sub">Last name</label>
-              <input
-                id="profile-last-name"
-                className={inputClasses}
-                value={form.last_name}
-                onChange={(e) => { setForm(f => ({ ...f, last_name: e.target.value })); setFormError(''); }}
-                disabled={saving}
-                autoComplete="family-name"
-              />
-            </div>
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="profile-secondary-email" className="text-sm font-medium text-text-sub">Secondary email</label>
-            <input
-              id="profile-secondary-email"
-              type="email"
-              className={inputClasses}
-              value={form.secondary_email}
-              onChange={(e) => { setForm(f => ({ ...f, secondary_email: e.target.value })); setFormError(''); }}
-              disabled={saving}
-              autoComplete="email"
-              placeholder="Optional"
-            />
-          </div>
-
-          {formError && (
-            <StatusBanner variant="error">{formError}</StatusBanner>
-          )}
-
-          <div className="flex justify-end gap-2 pt-1">
-            <button
-              type="button"
-              className={smallButtonClasses}
-              onClick={() => setEditing(false)}
-              disabled={saving}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="inline-flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary-hover transition-colors cursor-pointer focus:outline-none focus:ring-4 focus:ring-primary/20 disabled:opacity-60 disabled:cursor-not-allowed"
-              disabled={saving}
-            >
-              {saving && (
-                <span className="w-3 h-3 border-2 border-current/30 border-t-current rounded-full animate-spin" aria-hidden="true" />
-              )}
-              {saving ? 'Saving...' : 'Save changes'}
-            </button>
-          </div>
-        </form>
+        )}
       </Modal>
     </AuthLayout>
   );
