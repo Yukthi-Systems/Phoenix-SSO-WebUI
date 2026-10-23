@@ -47,7 +47,7 @@ export interface AuthContextValue {
   setTempMfaData: Dispatch<SetStateAction<TempMfaData | null>>;
   loading: boolean;
   error: string | null;
-  login: (email: string, password: string, rememberMe?: boolean) => Promise<LoginActionResult>;
+  login: (email: string, password: string, rememberMe?: boolean, recaptchaToken?: string) => Promise<LoginActionResult>;
   verifyOtp: (otpType: OtpType, otpCode: string) => Promise<OtpActionResult>;
   resendOtp: (otpType: OtpType) => Promise<OtpActionResult>;
   logout: () => Promise<void>;

@@ -27,23 +27,7 @@ import IconCircle from '../components/ui/IconCircle';
 import { getBrandName } from '../utils/security';
 import toast from 'react-hot-toast';
 import type { ApiError } from '../types';
-
-// Tracks the current data-theme attribute so the reCAPTCHA widget matches the active theme.
-function useDocumentTheme(): 'dark' | 'light' {
-  const [theme, setTheme] = useState<'dark' | 'light'>(
-    () => (document.documentElement.getAttribute('data-theme') as 'dark' | 'light') || 'dark'
-  );
-
-  useEffect(() => {
-    const observer = new MutationObserver(() => {
-      setTheme((document.documentElement.getAttribute('data-theme') as 'dark' | 'light') || 'dark');
-    });
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-    return () => observer.disconnect();
-  }, []);
-
-  return theme;
-}
+import { useDocumentTheme } from '../hooks/useDocumentTheme';
 
 export default function ForgotPassword() {
   const navigate = useNavigate();

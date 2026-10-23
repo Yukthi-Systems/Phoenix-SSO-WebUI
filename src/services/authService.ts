@@ -17,7 +17,7 @@
 
 import apiClient from '../api/client';
 import axios from 'axios';
-import type { DeviceDetails } from '../types';
+import type { DeviceDetails, BasicUserInfo, EditUserInfo } from '../types';
 
 // A handful of client-hint / device-fingerprint APIs aren't in the standard
 // DOM lib types yet — narrow, local casts instead of a blanket Navigator override.
@@ -149,7 +149,7 @@ const authService = {
   /**
    * Triggers initial credentials check
    */
-  async login(email: string, password: string, rememberMe: boolean) {
+  async login(email: string, password: string, rememberMe: boolean, recaptchaToken?: string) {
     let ipAddress = '';
     try {
       const controller = new AbortController();
@@ -168,7 +168,8 @@ const authService = {
       user_email: email,
       password,
       rememberMe,
-      device_details: deviceDetails
+      device_details: deviceDetails,
+      ...(recaptchaToken ? { recaptcha_token: recaptchaToken } : {})
     });
     return response.data;
     // Expected response format:
@@ -231,6 +232,24 @@ const authService = {
   async updateLastActive() {
     const response = await apiClient.post('/auth/last-active');
     return response.data;
+  },
+
+  /**
+   * Fetches the signed-in user's profile straight from the database (not the cached session)
+   */
+  async getMyInfo(): Promise<BasicUserInfo> {
+    const response = await apiClient.get('/user/my-info');
+    return response.data;
+  },
+
+  /**
+   * Updates the signed-in user's editable profile fields.
+   * The backend overwrites all three columns, so callers must send current values for unchanged fields.
+   */
+  async updateMyInfo(info: EditUserInfo) {
+    const response = await apiClient.put('/user/my-info', info);
+    return response.data;
+    // Expected response: "User info updated successfully"
   },
 
   /**

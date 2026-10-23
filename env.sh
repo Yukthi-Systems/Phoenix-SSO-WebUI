@@ -15,6 +15,8 @@ echo "window._env_ = {" >> ./dist/env-config.js
 echo "  VITE_API_URL: \"${VITE_API_URL}\"," >> ./dist/env-config.js
 echo "  VITE_SSO_URL: \"${VITE_SSO_URL}\"," >> ./dist/env-config.js
 echo "  VITE_FORGOT_PASSWORD_URL: \"${VITE_FORGOT_PASSWORD_URL}\"," >> ./dist/env-config.js
+# Optional — leave empty to disable reCAPTCHA on the login form.
+echo "  VITE_RECAPTCHA_SITE_KEY: \"${VITE_RECAPTCHA_SITE_KEY}\"," >> ./dist/env-config.js
 
 
 

@@ -31,3 +31,24 @@ export interface User {
 // MFA transaction data carries the same profile fields as User, gathered
 // before a session is fully established.
 export type TempMfaData = User;
+
+// GET /user/my-info — fetched from the DB, bypassing the session cache.
+export interface BasicUserInfo {
+  email: string;
+  domain_name: string;
+  first_name: string;
+  last_name: string | null;
+  employee_id: string | null;
+  primary_phone: string;
+  secondary_email: string | null;
+  is_app_2fa_enabled: boolean;
+  is_sms_2fa_enabled: boolean;
+  is_email_2fa_enabled: boolean;
+}
+
+// PUT /user/my-info payload
+export interface EditUserInfo {
+  first_name: string;
+  last_name: string | null;
+  secondary_email: string | null;
+}

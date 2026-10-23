@@ -15,15 +15,18 @@
  * <https://www.gnu.org/licenses/>.
  */
 
-import { useState, useEffect, type FormEvent } from 'react';
-import { useNavigate, useSearchParams, Link } from 'react-router-dom';
+import { useState, useEffect, useRef, type FormEvent } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import AuthLayout from '../layouts/AuthLayout';
 import { isValidOrigin, sanitizeRedirectUrl } from '../utils/security';
 import Button from '../components/ui/Button';
 import StatusBanner from '../components/ui/StatusBanner';
+import Reaptcha from 'react-google-recaptcha';
 import toast from 'react-hot-toast';
 import type { ApiError } from '../types';
+import { RECAPTCHA_SITE_KEY, FORGOT_PASSWORD_URL } from '../const/contants';
+import { useDocumentTheme } from '../hooks/useDocumentTheme';
 
 export default function Login() {
   const { login, isAuthenticated, error, clearError, loading } = useAuth();
@@ -35,6 +38,11 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [validationError, setValidationError] = useState('');
+
+  // reCAPTCHA (only rendered when a site key is configured)
+  const recaptchaTheme = useDocumentTheme();
+  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
+  const recaptchaRef = useRef<Reaptcha>(null);
 
   // Flow control flags
   const isPopup = searchParams.get('mode') === 'popup';
@@ -104,6 +112,10 @@ export default function Login() {
       setValidationError('Password must be at least 8 characters long.');
       return false;
     }
+    if (RECAPTCHA_SITE_KEY && !recaptchaToken) {
+      setValidationError('Please complete the reCAPTCHA verification.');
+      return false;
+    }
     setValidationError('');
     return true;
   };
@@ -113,7 +125,7 @@ export default function Login() {
     if (!validateForm()) return;
 
     try {
-      const result = await login(email, password);
+      const result = await login(email, password, false, recaptchaToken || undefined);
       if (result.mfaRequired) {
         const enabledMethods = [];
         if (result.is_app_2fa_enabled) enabledMethods.push('app');
@@ -139,11 +151,18 @@ export default function Login() {
         }, 1000);
       }
     } catch (err) {
+      // reCAPTCHA tokens are single-use — require a fresh one for the next attempt
+      recaptchaRef.current?.reset();
+      setRecaptchaToken(null);
       // Error handled by AuthContext state
       setValidationError((err as ApiError)?.message || '')
       console.log('Authentication failed:', (err as ApiError)?.message);
     }
   };
+
+  const displayedError = validationError || error;
+  // Password leak detection: the API rejects credentials found in known breaches
+  const isBreachedPassword = !!displayedError && /breached/i.test(displayedError);
 
   return (
     <AuthLayout>
@@ -197,12 +216,12 @@ export default function Login() {
             <label className="text-sm font-medium text-text-sub transition-colors" htmlFor="password">
               Password
             </label>
-            <Link
-              to="/forgot-password"
+            <a
+              href={FORGOT_PASSWORD_URL}
               className="text-xs text-primary font-medium hover:text-primary-hover hover:underline"
             >
               Forgot password?
-            </Link>
+            </a>
           </div>
           <div className="relative flex items-center">
             <span className="absolute left-3.5 text-text-muted pointer-events-none" aria-hidden="true">
@@ -248,8 +267,25 @@ export default function Login() {
           </div>
         </div>
 
+        {RECAPTCHA_SITE_KEY && (
+          <div className="mb-5 flex justify-center">
+            <Reaptcha
+              ref={recaptchaRef}
+              sitekey={RECAPTCHA_SITE_KEY}
+              size="normal"
+              onChange={(token) => {
+                setRecaptchaToken(token);
+                if (token && validationError) setValidationError('');
+              }}
+              onExpired={() => setRecaptchaToken(null)}
+              onErrored={() => setRecaptchaToken(null)}
+              theme={recaptchaTheme}
+            />
+          </div>
+        )}
+
         {/* Global/API Error Messages */}
-        {(error || validationError) && (
+        {displayedError && (
           <StatusBanner
             variant="error"
             className="mb-5"
@@ -261,7 +297,15 @@ export default function Login() {
               </svg>
             }
           >
-            {validationError || error}
+            {displayedError}
+            {isBreachedPassword && (
+              <>
+                {' '}
+                <a href={FORGOT_PASSWORD_URL} className="font-semibold underline hover:no-underline">
+                  Reset your password
+                </a>
+              </>
+            )}
           </StatusBanner>
         )}
 

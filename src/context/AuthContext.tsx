@@ -97,11 +97,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [checkSession]);
 
   // Log in using credentials
-  const loginAction = async (email: string, password: string, rememberMe?: boolean) => {
+  const loginAction = async (email: string, password: string, rememberMe?: boolean, recaptchaToken?: string) => {
     try {
       setLoading(true);
       setError(null);
-      const data = await authService.login(email, password, !!rememberMe);
+      const data = await authService.login(email, password, !!rememberMe, recaptchaToken);
 
       // Check if 2FA verification is required
       if (data && data.message === 'OTP verification required') {
