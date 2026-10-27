@@ -50,6 +50,20 @@ async function logout() {
 
 `checkSilentAuth(ssoUrl, appId)` is also available if you want to silently check for an existing SSO session (via a hidden iframe) without a popup — resolves with the session payload, rejects if there's no active session.
 
+To query the SSO session directly (no iframe), use `validateSession` and `getUserInfo`:
+
+```ts
+import { validateSession, getUserInfo } from '@rjyspl/phoenix-sso-react';
+
+const session = await validateSession('https://sso.example.com');
+if (session) {
+  // signed in — session.email, session.organization_name, ...
+  const profile = await getUserInfo('https://sso.example.com'); // fresh from the DB
+}
+```
+
+Both resolve `null` when there's no active session, and throw if the SSO service can't be reached — so a network blip doesn't look like a sign-out.
+
 ## `<SSOProvider>` + hooks (for apps with no auth system of their own)
 
 ```tsx
@@ -152,6 +166,15 @@ DELETE {ssoUrl}/auth/logout   (credentials: 'include')
 ```
 
 Should invalidate the session and respond with a 2xx status.
+
+**Session / user info** (used by `validateSession` / `getUserInfo`):
+
+```
+GET {ssoUrl}/auth/session   (credentials: 'include')   → SSOSession JSON
+GET {ssoUrl}/user/my-info   (credentials: 'include')   → SSOUserInfo JSON
+```
+
+Should respond 2xx with JSON when the session is active, and 401 when there's no active session. Since these are direct `fetch` calls (not an iframe), the SSO service must allow your app's origin via CORS with credentials, and the SSO cookie must be sent to it (same-site, or `SameSite=None`).
 
 **Security requirement:** the package only ever accepts a `postMessage` whose `event.origin` exactly matches `ssoUrl`'s origin. Your SSO service must validate the `origin` query param it receives just as strictly before trusting it as a `postMessage` target — never post back to an unvalidated origin.
 
@@ -330,6 +353,38 @@ await ssoLogout('https://sso.example.com');
 - **Returns:** `Promise<void>`.
 - **Throws** on a non-2xx response or network failure — same as the axios-based call this typically replaces, so an existing `try/catch` around your old logout call keeps working unchanged.
 
+### `validateSession(ssoUrl)`
+
+Checks the SSO session cookie directly against the SSO service (`GET {ssoUrl}/auth/session`) — no iframe.
+
+```ts
+import { validateSession } from '@rjyspl/phoenix-sso-react';
+
+const session = await validateSession('https://sso.example.com');
+if (session) {
+  console.log(session.email, session.organization_name);
+}
+```
+
+- **Returns:** `Promise<SSOSession | null>` — the session details, or `null` if there's no active session (401, including a session still waiting on 2FA).
+- **Throws** on network failure or any other non-2xx status — treat that as "couldn't check", not "signed out".
+
+### `getUserInfo(ssoUrl)`
+
+Fetches the signed-in user's profile fresh from the SSO service's database (`GET {ssoUrl}/user/my-info`), rather than the cached session.
+
+```ts
+import { getUserInfo } from '@rjyspl/phoenix-sso-react';
+
+const profile = await getUserInfo('https://sso.example.com');
+if (profile) {
+  console.log(profile.first_name, profile.primary_phone, profile.is_app_2fa_enabled);
+}
+```
+
+- **Returns:** `Promise<SSOUserInfo | null>` — the profile, or `null` if there's no active session.
+- **Throws** on network failure or any other non-2xx status.
+
 ### `redirectToLogin(ssoUrl, appId, options?)`
 
 Navigates the whole page to the SSO login screen instead of opening a popup — the fallback for `PopupBlockedError`.
@@ -373,6 +428,8 @@ buildLoginRedirectUrl('https://sso.example.com', 'my-app', 'https://my-app.com/l
 | `SSOAuthContextValue` | See `useSSOAuth()` above. |
 | `SsoMessageType` | `'SSO_AUTH_SUCCESS' \| 'SSO_AUTH_FAILED' \| 'SSO_SESSION_EXPIRED' \| 'SSO_LOGOUT'` — the wire protocol's `postMessage` types. |
 | `SsoMessage` | `{ type: SsoMessageType; message?: string; payload?: unknown }` |
+| `SSOSession` | `{ message: string; email: string; first_name: string; last_name: string \| null; organization_id: string; organization_name: string }` — `validateSession()` result. |
+| `SSOUserInfo` | `{ email: string; domain_name: string; first_name: string; last_name: string \| null; employee_id: string \| null; primary_phone: string; secondary_email: string \| null; is_app_2fa_enabled: boolean; is_sms_2fa_enabled: boolean; is_email_2fa_enabled: boolean }` — `getUserInfo()` result. |
 | `OpenLoginPopupOptions` | `SSOAppearance & { width?: number; height?: number }` |
 | `RedirectToLoginOptions` | `SSOAppearance & { returnTo?: string }` |
 | `SignInButtonProps` | Native `<button>` props (minus `type`) plus `{ children?: ReactNode }`. |

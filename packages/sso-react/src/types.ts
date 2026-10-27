@@ -54,6 +54,30 @@ export interface SsoMessage {
   payload?: unknown;
 }
 
+// GET {ssoUrl}/auth/session response
+export interface SSOSession {
+  message: string;
+  email: string;
+  first_name: string;
+  last_name: string | null;
+  organization_id: string;
+  organization_name: string;
+}
+
+// GET {ssoUrl}/user/my-info response
+export interface SSOUserInfo {
+  email: string;
+  domain_name: string;
+  first_name: string;
+  last_name: string | null;
+  employee_id: string | null;
+  primary_phone: string;
+  secondary_email: string | null;
+  is_app_2fa_enabled: boolean;
+  is_sms_2fa_enabled: boolean;
+  is_email_2fa_enabled: boolean;
+}
+
 export interface SSOAuthContextValue {
   status: SSOStatus;
   error: string | null;
