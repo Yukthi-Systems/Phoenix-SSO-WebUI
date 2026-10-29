@@ -35,7 +35,7 @@ export { openLoginPopup, cancelLoginPopup, PopupBlockedError } from './core/popu
 export type { OpenLoginPopupOptions } from './core/popupClient';
 export { checkSilentAuth, cancelSilentAuth } from './core/silentAuthClient';
 export { ssoLogout } from './core/logoutClient';
-export { validateSession, getUserInfo } from './core/sessionClient';
+export { validateSession, getUserInfo, refreshSession } from './core/sessionClient';
 export { redirectToLogin, buildLoginRedirectUrl } from './core/redirectClient';
 export type { RedirectToLoginOptions } from './core/redirectClient';
 
@@ -48,4 +48,5 @@ export type {
   SsoMessageType,
   SSOSession,
   SSOUserInfo,
+  SSORefreshResult,
 } from './types';

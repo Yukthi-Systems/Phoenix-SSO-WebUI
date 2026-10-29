@@ -64,6 +64,15 @@ if (session) {
 
 Both resolve `null` when there's no active session, and throw if the SSO service can't be reached — so a network blip doesn't look like a sign-out.
 
+The SSO session cookie expires a fixed time after it was last issued. Call `refreshSession` periodically (e.g. once every 7 days) to have the SSO service re-issue it with a fresh expiry:
+
+```ts
+import { refreshSession } from '@rjyspl/phoenix-sso-react';
+
+const result = await refreshSession('https://sso.example.com');
+// result?.expiration — new expiry as a Unix timestamp (seconds); null if not signed in
+```
+
 ## `<SSOProvider>` + hooks (for apps with no auth system of their own)
 
 ```tsx
@@ -172,6 +181,7 @@ Should invalidate the session and respond with a 2xx status.
 ```
 GET {ssoUrl}/auth/session   (credentials: 'include')   → SSOSession JSON
 GET {ssoUrl}/user/my-info   (credentials: 'include')   → SSOUserInfo JSON
+POST {ssoUrl}/auth/refresh  (credentials: 'include')   → SSORefreshResult JSON + re-issued session cookie
 ```
 
 Should respond 2xx with JSON when the session is active, and 401 when there's no active session. Since these are direct `fetch` calls (not an iframe), the SSO service must allow your app's origin via CORS with credentials, and the SSO cookie must be sent to it (same-site, or `SameSite=None`).
@@ -385,6 +395,22 @@ if (profile) {
 - **Returns:** `Promise<SSOUserInfo | null>` — the profile, or `null` if there's no active session.
 - **Throws** on network failure or any other non-2xx status.
 
+### `refreshSession(ssoUrl)`
+
+Extends the SSO session (`POST {ssoUrl}/auth/refresh`): the SSO service re-issues the session cookie with a fresh expiry. The cookie expires a fixed time after it was last issued, so call this periodically — e.g. once every 7 days, tracking the last call yourself — to keep active users signed in.
+
+```ts
+import { refreshSession } from '@rjyspl/phoenix-sso-react';
+
+const result = await refreshSession('https://sso.example.com');
+if (result) {
+  console.log(new Date(result.expiration * 1000)); // new cookie expiry
+}
+```
+
+- **Returns:** `Promise<SSORefreshResult | null>` — the new expiration, or `null` if there's no active session to extend (401). An already-expired cookie can't be refreshed; the user has to sign in again.
+- **Throws** on network failure or any other non-2xx status.
+
 ### `redirectToLogin(ssoUrl, appId, options?)`
 
 Navigates the whole page to the SSO login screen instead of opening a popup — the fallback for `PopupBlockedError`.
@@ -430,6 +456,7 @@ buildLoginRedirectUrl('https://sso.example.com', 'my-app', 'https://my-app.com/l
 | `SsoMessage` | `{ type: SsoMessageType; message?: string; payload?: unknown }` |
 | `SSOSession` | `{ message: string; email: string; first_name: string; last_name: string \| null; organization_id: string; organization_name: string }` — `validateSession()` result. |
 | `SSOUserInfo` | `{ email: string; domain_name: string; first_name: string; last_name: string \| null; employee_id: string \| null; primary_phone: string; secondary_email: string \| null; is_app_2fa_enabled: boolean; is_sms_2fa_enabled: boolean; is_email_2fa_enabled: boolean }` — `getUserInfo()` result. |
+| `SSORefreshResult` | `{ message: string; expiration: number }` — `refreshSession()` result; `expiration` is a Unix timestamp in seconds. |
 | `OpenLoginPopupOptions` | `SSOAppearance & { width?: number; height?: number }` |
 | `RedirectToLoginOptions` | `SSOAppearance & { returnTo?: string }` |
 | `SignInButtonProps` | Native `<button>` props (minus `type`) plus `{ children?: ReactNode }`. |

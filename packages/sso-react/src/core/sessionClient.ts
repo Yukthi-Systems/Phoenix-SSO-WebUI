@@ -15,16 +15,16 @@
  * <https://www.gnu.org/licenses/>.
  */
 
-import type { SSOSession, SSOUserInfo } from '../types';
+import type { SSOSession, SSOUserInfo, SSORefreshResult } from '../types';
 
 /**
- * GETs an SSO endpoint with the SSO cookie attached. Resolves `null` on 401
+ * Calls an SSO endpoint with the SSO cookie attached. Resolves `null` on 401
  * (no session, or a session still waiting on 2FA) so callers can tell
  * "signed out" apart from "SSO unreachable", which throws instead.
  */
-async function getWithSession<T>(url: string): Promise<T | null> {
+async function requestWithSession<T>(url: string, method: 'GET' | 'POST'): Promise<T | null> {
   const response = await fetch(url, {
-    method: 'GET',
+    method,
     credentials: 'include',
   });
 
@@ -45,7 +45,16 @@ async function getWithSession<T>(url: string): Promise<T | null> {
  * Throws on network failure or a non-401 error status.
  */
 export function validateSession(ssoUrl: string): Promise<SSOSession | null> {
-  return getWithSession<SSOSession>(`${ssoUrl}/auth/session`);
+  return requestWithSession<SSOSession>(`${ssoUrl}/auth/session`, 'GET');
+}
+
+/**
+ * Extends the SSO session: the SSO service re-issues the session cookie with
+ * a fresh expiry. Resolves with the new expiration, or `null` if there's no
+ * active session to extend. Throws on network failure or a non-401 error status.
+ */
+export function refreshSession(ssoUrl: string): Promise<SSORefreshResult | null> {
+  return requestWithSession<SSORefreshResult>(`${ssoUrl}/auth/refresh`, 'POST');
 }
 
 /**
@@ -54,5 +63,5 @@ export function validateSession(ssoUrl: string): Promise<SSOSession | null> {
  * Throws on network failure or a non-401 error status.
  */
 export function getUserInfo(ssoUrl: string): Promise<SSOUserInfo | null> {
-  return getWithSession<SSOUserInfo>(`${ssoUrl}/user/my-info`);
+  return requestWithSession<SSOUserInfo>(`${ssoUrl}/user/my-info`, 'GET');
 }

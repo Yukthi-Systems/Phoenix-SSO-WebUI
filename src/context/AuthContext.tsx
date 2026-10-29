@@ -313,6 +313,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [isAuthenticated]);
 
+  // Extends the SSO session cookie, at most once every 7 days
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const refreshInterval = 7 * 24 * 60 * 60 * 1000; // 7 days
+    const lastRefreshed = Number(localStorage.getItem('sso_last_refresh_at')) || 0;
+    if (Date.now() - lastRefreshed < refreshInterval) return;
+
+    const refresh = async () => {
+      try {
+        const data = await authService.refreshSession();
+        localStorage.setItem('sso_last_refresh_at', String(Date.now()));
+        if (data?.expiration) {
+          setSessionExpiration(data.expiration);
+        }
+      } catch (err) {
+        // Not recording the attempt, so the next load retries
+        console.warn('Failed to refresh SSO session:', err);
+      }
+    };
+
+    refresh();
+  }, [isAuthenticated, setSessionExpiration]);
+
   const clearError = () => setError(null);
 
   const value: AuthContextValue = {

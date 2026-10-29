@@ -235,6 +235,15 @@ const authService = {
   },
 
   /**
+   * Extends the SSO session — the server re-issues the session cookie with a fresh expiry
+   */
+  async refreshSession() {
+    const response = await apiClient.post('/auth/refresh');
+    return response.data;
+    // Expected response: { message: 'Session refreshed successfully', expiration: <unix seconds> }
+  },
+
+  /**
    * Fetches the signed-in user's profile straight from the database (not the cached session)
    */
   async getMyInfo(): Promise<BasicUserInfo> {

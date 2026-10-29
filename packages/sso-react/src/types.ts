@@ -64,6 +64,13 @@ export interface SSOSession {
   organization_name: string;
 }
 
+// POST {ssoUrl}/auth/refresh response
+export interface SSORefreshResult {
+  message: string;
+  /** New cookie expiry, as a Unix timestamp in seconds */
+  expiration: number;
+}
+
 // GET {ssoUrl}/user/my-info response
 export interface SSOUserInfo {
   email: string;
