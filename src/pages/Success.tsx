@@ -23,6 +23,7 @@ import { userAtom } from '../store/authStore';
 import authService from '../services/authService';
 import AuthLayout from '../layouts/AuthLayout';
 import { getBrandName } from '../utils/security';
+import { FORGOT_PASSWORD_URL } from '../const/contants';
 import Button from '../components/ui/Button';
 import StatusPill from '../components/ui/StatusPill';
 import StatusBanner from '../components/ui/StatusBanner';
@@ -288,6 +289,23 @@ export default function Success() {
         {/* Multi-factor authentication */}
         <Section title="Sign-in security">
           <ul className="divide-y divide-card-border">
+            {/* Password changes go through the same reset flow as "Forgot password" */}
+            <li className="flex items-center justify-between gap-3 py-1.5">
+              <span className="flex items-center gap-2.5 min-w-0 text-sm text-text-main">
+                <span className="text-text-muted shrink-0" aria-hidden="true">
+                  <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path>
+                  </svg>
+                </span>
+                <span className="truncate">Password</span>
+              </span>
+              <a
+                href={FORGOT_PASSWORD_URL}
+                className="text-xs font-semibold text-primary px-2 py-1 -mr-2 rounded-md hover:text-primary-hover hover:bg-surface-inset-strong transition-colors focus:outline-none focus-visible:ring-4 focus-visible:ring-primary/20"
+              >
+                Change password
+              </a>
+            </li>
             <SecurityRow
               label="Authenticator app"
               enabled={!!isApp2fa}

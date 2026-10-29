@@ -34,7 +34,14 @@ const getEnv = (key: string): string => {
 
 export const API_URL = getEnv('VITE_API_URL');
 export const SSO_URL = getEnv('VITE_SSO_URL');
-export const FORGOT_PASSWORD_URL = getEnv('VITE_FORGOT_PASSWORD_URL');
+
+const withIdentityMode = (url: string): string => {
+    const parsed = new URL(url)
+    parsed.searchParams.set('mode', 'identity')
+    return parsed.toString()
+}
+
+export const FORGOT_PASSWORD_URL = withIdentityMode(getEnv('VITE_FORGOT_PASSWORD_URL'));
 
 // Optional: when unset, the login form renders without reCAPTCHA and sends no token.
 export const RECAPTCHA_SITE_KEY =
