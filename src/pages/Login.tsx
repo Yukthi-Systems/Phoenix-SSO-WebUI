@@ -44,6 +44,14 @@ export default function Login() {
   const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
   const recaptchaRef = useRef<Reaptcha>(null);
 
+  // The widget only reads `theme` on mount, so it's re-mounted (keyed) on a
+  // theme change — which also discards any solved challenge
+  const [prevRecaptchaTheme, setPrevRecaptchaTheme] = useState(recaptchaTheme);
+  if (recaptchaTheme !== prevRecaptchaTheme) {
+    setPrevRecaptchaTheme(recaptchaTheme);
+    setRecaptchaToken(null);
+  }
+
   // Flow control flags
   const isPopup = searchParams.get('mode') === 'popup';
   const redirectUri = searchParams.get('redirect_uri');
@@ -270,6 +278,7 @@ export default function Login() {
         {RECAPTCHA_SITE_KEY && (
           <div className="mb-5 flex justify-center">
             <Reaptcha
+              key={recaptchaTheme}
               ref={recaptchaRef}
               sitekey={RECAPTCHA_SITE_KEY}
               size="normal"

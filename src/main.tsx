@@ -18,6 +18,14 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
+import { getInitialTheme } from './utils/theme'
+
+// Apply the theme before the first render, so nothing (e.g. the reCAPTCHA
+// widget, which reads it once on mount) sees the default first
+document.documentElement.setAttribute(
+  'data-theme',
+  getInitialTheme(new URLSearchParams(window.location.search).get('theme')),
+)
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

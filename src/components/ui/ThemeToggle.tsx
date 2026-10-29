@@ -17,20 +17,7 @@
 
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-
-type Theme = 'dark' | 'light';
-
-const STORAGE_KEY = 'theme';
-
-// A `?theme=` param from a hosting app (e.g. matching its own current theme)
-// takes priority over the visitor's saved choice — it reflects the caller's
-// intent for *this* session, not a permanent preference override.
-function getInitialTheme(urlTheme: string | null): Theme {
-  if (urlTheme === 'dark' || urlTheme === 'light') return urlTheme;
-  const stored = window.localStorage.getItem(STORAGE_KEY);
-  if (stored === 'dark' || stored === 'light') return stored;
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-}
+import { getInitialTheme, THEME_STORAGE_KEY, type Theme } from '../../utils/theme';
 
 export default function ThemeToggle() {
   const [searchParams] = useSearchParams();
@@ -38,7 +25,7 @@ export default function ThemeToggle() {
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
-    window.localStorage.setItem(STORAGE_KEY, theme);
+    window.localStorage.setItem(THEME_STORAGE_KEY, theme);
   }, [theme]);
 
   const toggleTheme = () => setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
