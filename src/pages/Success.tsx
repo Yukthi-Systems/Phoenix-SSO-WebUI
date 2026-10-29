@@ -15,7 +15,7 @@
  * <https://www.gnu.org/licenses/>.
  */
 
-import { useState, useEffect, useCallback, type ReactNode, type FormEvent } from 'react';
+import { useState, useEffect, useCallback, useId, type ReactNode, type FormEvent } from 'react';
 import { useSetAtom } from 'jotai';
 import toast from 'react-hot-toast';
 import { useAuth } from '../hooks/useAuth';
@@ -24,44 +24,69 @@ import authService from '../services/authService';
 import AuthLayout from '../layouts/AuthLayout';
 import { getBrandName } from '../utils/security';
 import Button from '../components/ui/Button';
-import IconCircle from '../components/ui/IconCircle';
 import StatusPill from '../components/ui/StatusPill';
 import StatusBanner from '../components/ui/StatusBanner';
 import Modal from '../components/ui/Modal';
 import type { ApiError, BasicUserInfo, User } from '../types';
 
-type ChipTone = 'success' | 'primary' | 'neutral';
-
-const chipToneClasses: Record<ChipTone, string> = {
-  success: 'bg-success/10 text-success border-success/20',
-  primary: 'bg-primary/10 text-primary border-primary/20',
-  neutral: 'bg-card text-text-muted border-card-border',
-};
-
-function StatusChip({ icon, label, tone }: { icon: ReactNode; label: string; tone: ChipTone }) {
-  return (
-    <span
-      className={`inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border ${chipToneClasses[tone]}`}
-    >
-      {icon}
-      {label}
-    </span>
-  );
-}
-
 const inputClasses =
   'w-full px-3 py-2.5 bg-surface-inset-strong border border-card-border rounded-lg text-text-main text-base sm:text-sm outline-none transition-all placeholder-text-muted focus:border-primary focus:bg-surface-inset-focus focus:ring-4 focus:ring-primary/20 disabled:opacity-60';
 
 const smallButtonClasses =
-  'inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg border border-card-border text-text-sub hover:text-text-main hover:bg-white/5 transition-colors cursor-pointer focus:outline-none focus:ring-4 focus:ring-primary/20 disabled:opacity-60 disabled:cursor-not-allowed';
+  'inline-flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded-md text-text-sub hover:text-text-main hover:bg-surface-inset-strong transition-colors cursor-pointer focus:outline-none focus-visible:ring-4 focus-visible:ring-primary/20 disabled:opacity-60 disabled:cursor-not-allowed';
 
-function DetailRow({ label, value }: { label: string; value: ReactNode }) {
+function Section({ title, action, children }: { title: string; action?: ReactNode; children: ReactNode }) {
+  const headingId = useId();
   return (
-    <div className="flex items-center justify-between gap-4 py-2.5">
-      <dt className="text-xs text-text-muted shrink-0">{label}</dt>
-      <dd className="text-sm font-medium text-text-main truncate text-right">{value}</dd>
+    <section aria-labelledby={headingId} className="pt-3 border-t border-card-border">
+      <div className="flex items-center justify-between gap-2 min-h-7">
+        <h3 id={headingId} className="text-xs font-semibold uppercase tracking-wider text-text-muted">
+          {title}
+        </h3>
+        {action}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+// `value === undefined` while loading renders a placeholder bar; empty values read "Not added"
+function DetailRow({ label, value, loading }: { label: string; value: string | null | undefined; loading?: boolean }) {
+  let content: ReactNode;
+  if (value) {
+    content = <span className="text-text-main" title={value}>{value}</span>;
+  } else if (loading && value === undefined) {
+    content = <span className="inline-block h-3.5 w-24 align-middle rounded bg-surface-inset-strong animate-pulse" aria-hidden="true" />;
+  } else {
+    content = <span className="text-text-muted">Not added</span>;
+  }
+
+  return (
+    <div className="flex items-center justify-between gap-4 py-1.5">
+      <dt className="text-sm text-text-sub shrink-0">{label}</dt>
+      <dd className="text-sm font-medium truncate text-right min-w-0">{content}</dd>
     </div>
   );
+}
+
+function SecurityRow({ icon, label, enabled }: { icon: ReactNode; label: string; enabled: boolean }) {
+  return (
+    <li className="flex items-center justify-between gap-3 py-1.5">
+      <span className="flex items-center gap-2.5 min-w-0 text-sm text-text-main">
+        <span className="text-text-muted shrink-0" aria-hidden="true">{icon}</span>
+        <span className="truncate">{label}</span>
+      </span>
+      <StatusPill active={enabled} activeLabel="Enabled" inactiveLabel="Off" />
+    </li>
+  );
+}
+
+function getInitials(name: string, email: string) {
+  const parts = name.split(/\s+/).filter(Boolean);
+  if (parts.length > 0) {
+    return parts.slice(0, 2).map(p => p[0]).join('').toUpperCase();
+  }
+  return email.charAt(0).toUpperCase();
 }
 
 export default function Success() {
@@ -73,8 +98,7 @@ export default function Success() {
   const [profileLoading, setProfileLoading] = useState(true);
   const [profileError, setProfileError] = useState('');
 
-  // Account details modal; `editing` switches it from view to edit mode
-  const [detailsOpen, setDetailsOpen] = useState(false);
+  // Edit profile modal
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState('');
@@ -155,10 +179,10 @@ export default function Success() {
     }
   };
 
-  const closeDetails = () => {
+  const closeEditing = () => {
     if (saving) return;
-    setDetailsOpen(false);
     setEditing(false);
+    setFormError('');
   };
 
   const handleLogout = async () => {
@@ -178,279 +202,204 @@ export default function Success() {
   const isApp2fa = profile?.is_app_2fa_enabled ?? user?.is_app_2fa_enabled;
   const isSms2fa = profile?.is_sms_2fa_enabled ?? user?.is_sms_2fa_enabled;
   const isEmail2fa = profile?.is_email_2fa_enabled ?? user?.is_email_2fa_enabled;
-  const mfaEnabled = !!(isApp2fa || isSms2fa || isEmail2fa);
+  const showSkeleton = profileLoading && !profile;
 
   return (
     <AuthLayout>
-      <div className="text-center flex flex-col items-center gap-5 animate-[fadeIn_0.3s_ease-out]">
+      <div className="flex flex-col gap-4 animate-[fadeIn_0.3s_ease-out]">
 
-        {/* Checkmark Circle */}
-        <IconCircle variant="success" size="md">
-          <svg width="26" height="26" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24" aria-hidden="true">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-          </svg>
-        </IconCircle>
-
-        {/* Personalized greeting */}
-        <div className="flex flex-col gap-1.5 -mt-1">
-          <h2 className="text-xl font-bold tracking-tight text-text-main">
-            Welcome back{firstName ? `, ${firstName}` : ''}
-          </h2>
-          <p className="text-sm text-text-muted px-4 leading-relaxed">
-            Your session is verified and securely established.
-          </p>
+        {/* Identity */}
+        <div className="flex items-center gap-3.5">
+          <div
+            className="w-12 h-12 shrink-0 rounded-full bg-primary/10 text-primary border border-primary/20 flex items-center justify-center text-base font-semibold"
+            aria-hidden="true"
+          >
+            {getInitials(displayName, displayEmail)}
+          </div>
+          <div className="min-w-0 flex-1">
+            <h2 className="text-lg font-semibold tracking-tight text-text-main truncate" title={displayName || displayEmail}>
+              {displayName || displayEmail}
+            </h2>
+            {displayName && (
+              <p className="text-sm text-text-muted truncate" title={displayEmail}>{displayEmail}</p>
+            )}
+            <p role="status" className="mt-1 flex items-center gap-1.5 text-xs font-medium text-success">
+              <span className="w-1.5 h-1.5 rounded-full bg-success shrink-0" aria-hidden="true" />
+              Signed in · Session active
+            </p>
+          </div>
         </div>
 
-        {/* Status summary */}
-        <div className="flex flex-wrap justify-center gap-2">
-          <StatusChip
-            tone="success"
-            icon={
-              <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-              </svg>
-            }
-            label="Identity Verified"
-          />
-          <StatusChip
-            tone={mfaEnabled ? 'success' : 'neutral'}
-            icon={
-              <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" aria-hidden="true">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-              </svg>
-            }
-            label={mfaEnabled ? 'MFA Active' : 'MFA Not Enabled'}
-          />
-          <StatusChip
-            tone="primary"
-            icon={
-              <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" aria-hidden="true">
-                <circle cx="12" cy="12" r="10"></circle>
-                <polyline points="12,6 12,12 16,14"></polyline>
-              </svg>
-            }
-            label="Session Active"
-          />
-        </div>
+        {profileError && (
+          <StatusBanner variant="error">{profileError}</StatusBanner>
+        )}
 
-        {/* Account details (opens modal) */}
-        <button
-          type="button"
-          onClick={() => setDetailsOpen(true)}
-          className="inline-flex items-center underline justify-center gap-1.5 text-sm font-medium text-text-sub hover:text-text-main transition-colors py-1 px-2 rounded-lg cursor-pointer focus:outline-none focus:ring-4 focus:ring-primary/20"
+        {/* Account details */}
+        <Section
+          title="Account"
+          action={
+            <div className="flex items-center gap-0.5 -mr-2">
+              <button
+                type="button"
+                className={smallButtonClasses}
+                onClick={fetchProfile}
+                disabled={profileLoading}
+                aria-label="Refresh account details"
+                title="Refresh"
+              >
+                <svg
+                  width="13"
+                  height="13"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                  className={profileLoading ? 'animate-spin' : ''}
+                >
+                  <polyline points="23 4 23 10 17 10"></polyline>
+                  <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                </svg>
+              </button>
+              <button
+                type="button"
+                className={smallButtonClasses}
+                onClick={startEditing}
+                disabled={showSkeleton}
+              >
+                <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 20h9"></path>
+                  <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                </svg>
+                Edit
+              </button>
+            </div>
+          }
         >
-          <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-            <circle cx="12" cy="7" r="4"></circle>
-          </svg>
-          <span>View account details</span>
-        </button>
+          <dl className="divide-y divide-card-border" aria-busy={profileLoading}>
+            {user?.organization_name && <DetailRow label="Organization" value={user.organization_name} />}
+            <DetailRow label="Domain" value={profile?.domain_name ?? (showSkeleton ? undefined : displayEmail.split('@')[1])} loading={showSkeleton} />
+            {profile?.employee_id && <DetailRow label="Employee ID" value={profile.employee_id} />}
+            <DetailRow label="Phone" value={primaryPhone} loading={showSkeleton} />
+            <DetailRow label="Secondary email" value={secondaryEmail} loading={showSkeleton} />
+          </dl>
+        </Section>
 
-        {/* Action Button */}
+        {/* Multi-factor authentication */}
+        <Section title="Sign-in security">
+          <ul className="divide-y divide-card-border">
+            <SecurityRow
+              label="Authenticator app"
+              enabled={!!isApp2fa}
+              icon={
+                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+                  <line x1="12" y1="18" x2="12.01" y2="18"></line>
+                </svg>
+              }
+            />
+            <SecurityRow
+              label="SMS verification"
+              enabled={!!isSms2fa}
+              icon={
+                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>
+              }
+            />
+            <SecurityRow
+              label="Email verification"
+              enabled={!!isEmail2fa}
+              icon={
+                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                  <polyline points="22,6 12,13 2,6"></polyline>
+                </svg>
+              }
+            />
+          </ul>
+        </Section>
+
         <Button variant="secondary" onClick={handleLogout} loading={loading} loadingText="Signing out...">
-          <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true">
+          <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
           </svg>
-          <span>Sign Out</span>
+          <span>Sign out</span>
         </Button>
 
       </div>
 
       <Modal
-        open={detailsOpen}
-        onClose={closeDetails}
-        title={editing ? 'Edit profile' : 'Account details'}
-        description={editing ? 'Update your name and secondary email address.' : 'Your profile and sign-in security settings.'}
+        open={editing}
+        onClose={closeEditing}
+        title="Edit profile"
+        description="Update your name and secondary email address."
       >
-        {editing ? (
-          <form onSubmit={handleSave} noValidate className="flex flex-col gap-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="flex flex-col gap-1.5">
-                <label htmlFor="profile-first-name" className="text-sm font-medium text-text-sub">First name</label>
-                <input
-                  id="profile-first-name"
-                  className={inputClasses}
-                  value={form.first_name}
-                  onChange={(e) => { setForm(f => ({ ...f, first_name: e.target.value })); setFormError(''); }}
-                  disabled={saving}
-                  autoComplete="given-name"
-                  required
-                />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <label htmlFor="profile-last-name" className="text-sm font-medium text-text-sub">Last name</label>
-                <input
-                  id="profile-last-name"
-                  className={inputClasses}
-                  value={form.last_name}
-                  onChange={(e) => { setForm(f => ({ ...f, last_name: e.target.value })); setFormError(''); }}
-                  disabled={saving}
-                  autoComplete="family-name"
-                />
-              </div>
-            </div>
+        <form onSubmit={handleSave} noValidate className="flex flex-col gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="profile-secondary-email" className="text-sm font-medium text-text-sub">Secondary email</label>
+              <label htmlFor="profile-first-name" className="text-sm font-medium text-text-sub">First name</label>
               <input
-                id="profile-secondary-email"
-                type="email"
+                id="profile-first-name"
                 className={inputClasses}
-                value={form.secondary_email}
-                onChange={(e) => { setForm(f => ({ ...f, secondary_email: e.target.value })); setFormError(''); }}
+                value={form.first_name}
+                onChange={(e) => { setForm(f => ({ ...f, first_name: e.target.value })); setFormError(''); }}
                 disabled={saving}
-                autoComplete="email"
-                placeholder="Optional"
+                autoComplete="given-name"
+                required
               />
             </div>
-
-            {formError && (
-              <StatusBanner variant="error">{formError}</StatusBanner>
-            )}
-
-            <div className="flex justify-end gap-2 pt-1">
-              <button
-                type="button"
-                className="inline-flex items-center text-sm font-medium px-4 py-2 rounded-lg border border-card-border text-text-sub hover:text-text-main hover:bg-white/5 transition-colors cursor-pointer focus:outline-none focus:ring-4 focus:ring-primary/20 disabled:opacity-60 disabled:cursor-not-allowed"
-                onClick={() => { setEditing(false); setFormError(''); }}
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="profile-last-name" className="text-sm font-medium text-text-sub">Last name</label>
+              <input
+                id="profile-last-name"
+                className={inputClasses}
+                value={form.last_name}
+                onChange={(e) => { setForm(f => ({ ...f, last_name: e.target.value })); setFormError(''); }}
                 disabled={saving}
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="inline-flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary-hover transition-colors cursor-pointer focus:outline-none focus:ring-4 focus:ring-primary/20 disabled:opacity-60 disabled:cursor-not-allowed"
-                disabled={saving}
-              >
-                {saving && (
-                  <span className="w-3 h-3 border-2 border-current/30 border-t-current rounded-full animate-spin" aria-hidden="true" />
-                )}
-                {saving ? 'Saving...' : 'Save changes'}
-              </button>
-            </div>
-          </form>
-        ) : (
-          <div className="flex flex-col gap-4">
-            {profileError && (
-              <StatusBanner variant="error">
-                {profileError}
-              </StatusBanner>
-            )}
-
-            {/* Account Profile */}
-            <div className="px-4 bg-surface-inset border border-card-border rounded-2xl">
-              <div className="flex items-center justify-between gap-2 pt-3 pb-1">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-primary flex items-center gap-2">
-                  <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="12" cy="7" r="4"></circle>
-                  </svg>
-                  Account Profile
-                </h3>
-                <div className="flex items-center gap-1.5">
-                  <button
-                    type="button"
-                    className={smallButtonClasses}
-                    onClick={fetchProfile}
-                    disabled={profileLoading}
-                    aria-label="Refresh profile"
-                  >
-                    <svg
-                      width="12"
-                      height="12"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      viewBox="0 0 24 24"
-                      aria-hidden="true"
-                      className={profileLoading ? 'animate-spin' : ''}
-                    >
-                      <polyline points="23 4 23 10 17 10"></polyline>
-                      <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
-                    </svg>
-                    Refresh
-                  </button>
-                  <button
-                    type="button"
-                    className={smallButtonClasses}
-                    onClick={startEditing}
-                    disabled={profileLoading && !profile}
-                  >
-                    <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="M12 20h9"></path>
-                      <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
-                    </svg>
-                    Edit
-                  </button>
-                </div>
-              </div>
-
-              <dl className="divide-y divide-card-border/60" aria-busy={profileLoading}>
-                <DetailRow label="Email" value={displayEmail} />
-                {displayName && <DetailRow label="Name" value={displayName} />}
-                {profile?.employee_id && <DetailRow label="Employee ID" value={profile.employee_id} />}
-                {user?.organization_name && <DetailRow label="Organization" value={user.organization_name} />}
-                {profile?.domain_name && <DetailRow label="Domain" value={profile.domain_name} />}
-                {primaryPhone && <DetailRow label="Phone" value={primaryPhone} />}
-                {secondaryEmail && <DetailRow label="Secondary Email" value={secondaryEmail} />}
-              </dl>
-            </div>
-
-            {/* Security & MFA Settings */}
-            <div className="px-4 bg-surface-inset border border-card-border rounded-2xl">
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-accent flex items-center gap-2 pt-3.5 pb-1">
-                <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                </svg>
-                Multi-Factor Authentication
-              </h3>
-
-              <div className="divide-y divide-card-border/60">
-                {/* Authenticator App */}
-                <div className="flex items-center justify-between gap-3 py-2.5">
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="text-text-sub shrink-0">
-                      <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                        <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
-                        <line x1="12" y1="18" x2="12.01" y2="18"></line>
-                      </svg>
-                    </div>
-                    <span className="text-sm font-medium text-text-main truncate">Authenticator App</span>
-                  </div>
-                  <StatusPill active={!!isApp2fa} />
-                </div>
-
-                {/* SMS OTP */}
-                <div className="flex items-center justify-between gap-3 py-2.5">
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="text-text-sub shrink-0">
-                      <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                      </svg>
-                    </div>
-                    <span className="text-sm font-medium text-text-main truncate">SMS Verification</span>
-                  </div>
-                  <StatusPill active={!!isSms2fa} />
-                </div>
-
-                {/* Email OTP */}
-                <div className="flex items-center justify-between gap-3 py-2.5">
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="text-text-sub shrink-0">
-                      <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                        <polyline points="22,6 12,13 2,6"></polyline>
-                      </svg>
-                    </div>
-                    <span className="text-sm font-medium text-text-main truncate">Email Verification</span>
-                  </div>
-                  <StatusPill active={!!isEmail2fa} />
-                </div>
-              </div>
+                autoComplete="family-name"
+              />
             </div>
           </div>
-        )}
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="profile-secondary-email" className="text-sm font-medium text-text-sub">Secondary email</label>
+            <input
+              id="profile-secondary-email"
+              type="email"
+              className={inputClasses}
+              value={form.secondary_email}
+              onChange={(e) => { setForm(f => ({ ...f, secondary_email: e.target.value })); setFormError(''); }}
+              disabled={saving}
+              autoComplete="email"
+              placeholder="Optional"
+            />
+          </div>
+
+          {formError && (
+            <StatusBanner variant="error">{formError}</StatusBanner>
+          )}
+
+          <div className="flex justify-end gap-2 pt-1">
+            <button
+              type="button"
+              className="inline-flex items-center text-sm font-medium px-4 py-2 rounded-lg border border-card-border text-text-sub hover:text-text-main hover:bg-surface-inset-strong transition-colors cursor-pointer focus:outline-none focus:ring-4 focus:ring-primary/20 disabled:opacity-60 disabled:cursor-not-allowed"
+              onClick={closeEditing}
+              disabled={saving}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="inline-flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary-hover transition-colors cursor-pointer focus:outline-none focus:ring-4 focus:ring-primary/20 disabled:opacity-60 disabled:cursor-not-allowed"
+              disabled={saving}
+            >
+              {saving && (
+                <span className="w-3 h-3 border-2 border-current/30 border-t-current rounded-full animate-spin" aria-hidden="true" />
+              )}
+              {saving ? 'Saving...' : 'Save changes'}
+            </button>
+          </div>
+        </form>
       </Modal>
     </AuthLayout>
   );

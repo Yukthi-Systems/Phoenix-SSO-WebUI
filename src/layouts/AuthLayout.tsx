@@ -47,7 +47,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
               : 'w-full max-w-[440px] bg-card backdrop-blur-2xl border border-card-border rounded-2xl shadow-lg transition-all duration-300 animate-slide-up'
           }
         >
-          <div className={isPopup ? 'p-5' : 'p-10'}>
+          <div className={isPopup ? 'p-5' : 'p-6 sm:p-10'}>
             <BrandHeader appName={appName} />
 
             {children}
